@@ -1,0 +1,16 @@
+BPROP "system" "security.mdf.result" ""
+BPROP "system" "security.mdf" ""
+BPROP "system" "ro.security.mdf.ver" ""
+BPROP "system" "ro.security.mdf.release" ""
+BPROP "system" "ro.security.wlan.ver" ""
+BPROP "system" "ro.security.wlan.release" ""
+
+BPROP "system" "ro.security.bio.ver" ""
+BPROP "system" "ro.security.bio.release" ""
+BPROP "system" "ro.security.mdf.ux" ""
+BPROP "system" "ro.security.fips.ux" "Disabled"
+BPROP "vendor" "ro.security.fips.ux" "Disabled"
+BPROP "system" "ro.security.fips_bssl.ver" ""
+BPROP "system" "ro.config.iccc_version" ""
+
+BPROP "system" "ro.oem_unlock_supported" "0"

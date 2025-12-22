@@ -1,0 +1,9 @@
+FILE smali/com/samsung/android/knox/EnterpriseDeviceManager.smali
+REPLACE  .method public static greylist getAPILevel()I
+    .locals 1
+ 
+     const/16 v0, 0x27
+
+     return v0
+
+END
