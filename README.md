@@ -72,7 +72,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **[erofs-utils](https://github.com/sekaiacg/erofs-utils)** - Dual licensed (GPL-2.0, Apache-2.0)
 - **[platform_build](https://android.googlesource.com/platform/build)** - Licensed under Apache License 2.0
 - **[smali](https://github.com/google/smali)** - Licensed under BSD 3-Clause License
-- 
+  
 ---
 
 ## Contributing
