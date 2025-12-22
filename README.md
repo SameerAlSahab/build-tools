@@ -58,6 +58,8 @@ This project wouldn't be possible without the incredible work of:
 - **[Salvo Giangreco](https://github.com/salvogiangri)** - The mind behind the **[UN1CA](https://github.com/salvogiangri/UN1CA)** project and a true leader in the Samsung community. The initial ideas and inspiration that made AstroROM possible.
 - **[BlassGO](https://github.com/BlassGO)** - For the Dynamic Installer.
 - **[Danda420](https://github.com/Danda420)** - For his genfscontexts.
+- **[jesec](https://github.com/jesec)** - For samfirm.js , which we use to download the latest firmwares'
+- **[3arthur6](https://github.com/3arthur6)** - For bluetooth library patcher.
 
 ---
 
@@ -67,9 +69,10 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - **[android-tools](https://github.com/nmeum/android-tools)** - Licensed under Apache License 2.0
 - **[apktool](https://github.com/iBotPeaches/Apktool)** - Licensed under Apache License 2.0  
-- **[erofs-utils](https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git)** - Dual licensed (GPL-2.0, Apache-2.0)
+- **[erofs-utils](https://github.com/sekaiacg/erofs-utils)** - Dual licensed (GPL-2.0, Apache-2.0)
 - **[platform_build](https://android.googlesource.com/platform/build)** - Licensed under Apache License 2.0
-
+- **[smali](https://github.com/google/smali)** - Licensed under BSD 3-Clause License
+- 
 ---
 
 ## Contributing
