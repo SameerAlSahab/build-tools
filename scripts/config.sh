@@ -50,6 +50,8 @@ SETUP_DEVICE_ENV() {
     LOG_DIALOG "Setting up Device environment" "Validating build parameters and sourcing data"
 
     CHECK_ALL_DEPENDENCIES
+	
+	chmod +x -R "$BIN"
 
     if ! VALIDATE_DEVICE_VARS; then
         LOG_WARN "Failed to validate device environment variables."
@@ -97,21 +99,21 @@ SETUP_DEVICE_ENV() {
 
 # Format: "DebianPkgName|ArchPkgName|PrettyName|Critical(true/false)"
 dependencies_config=(
-    "openjdk-17-jdk|jdk17-openjdk|Java 17+ (Java is required for APK/JAR)|true"
+    "openjdk-17-jdk|jdk17-openjdk|Java 17+ (Java is required for APK/JAR patching)|true"
     "python3|python|Python 3 (For Python modules)|true"
     "xmlstarlet|xmlstarlet|XML manipulation (Editing xml files)|true"
     "lz4|lz4|LZ4 compression (for decompression)|true"
-    "p7zip-full|p7zip|7-Zip (Archive extraction)|true"
+    "p7zip-full|p7zip|7-Zip (For extraction)|true"
     "bc|bc|BC calculator (Size calculations)|true"
     "zip|zip|Zip utility (For zipping)|true"
-    "nodejs|nodejs|Node.js (JS-based utilities)|true"
+    "nodejs|nodejs|Node.js (For JS-based utilities)|true"
     "e2fsprogs|e2fsprogs|EXT4 filesystem tools|true"
-    "attr|attr|xattr (SELinux context handling)|true"
+    "attr|attr|xattr (SELinux configs)|true"
     "zipalign|android-sdk-build-tools|Zipalign (APKs alignment)|true"
-    "f2fs-tools|f2fs-tools|Tools for F2FS|true" 
-	"jq|jq|JQ|true"
-	"ffmpeg|ffmpeg|Video conversion|true"
-	"webp|webp|WEBP Conversion|true"
+    "f2fs-tools|f2fs-tools|(Tools for F2FS)|true" 
+	"jq|jq|(For JQ)|true"
+	"ffmpeg|ffmpeg|(Video conversion)|true"
+	"webp|libwebp|(WEBP conversion)|true"
 )
 
 DISTRO_TYPE=""

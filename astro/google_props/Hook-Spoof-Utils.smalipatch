@@ -1,19 +1,4 @@
-
-//  Inject hook into ApplicationPackageManager for google_props
-
-// Increased locals +1
-
-#    invoke-static {p1}, Lcom/android/internal/util/PixelSpoof;->shouldSpoof(Ljava/lang/String;)Z
-#
-#    move-result v0
-#
-#    if-eqz v0, :cond_continue
-#    const/4 v0, 0x1
-#    return v0
-#    :cond_continue
-    
-//Added lines after .locals in .method public whitelist hasSystemFeature(Ljava/lang/String;I)Z
-
+  
 FILE smali/android/app/ApplicationPackageManager.smali
 REPLACE .method public whitelist hasSystemFeature(Ljava/lang/String;I)Z
     .locals 3
@@ -128,7 +113,7 @@ REPLACE .method public static whitelist newApplication(Ljava/lang/Class;Landroid
 
     invoke-virtual {p0, p1}, Landroid/app/Application;->attach(Landroid/content/Context;)V
     
-    # Lets hook spoofers 
+    # 
     
     invoke-static {p1}, Lcom/android/internal/util/PixelSpoof;->setProps(Landroid/content/Context;)V
 
@@ -160,7 +145,7 @@ REPLACE .method public whitelist newApplication(Ljava/lang/ClassLoader;Ljava/lan
 
     invoke-virtual {p0, p3}, Landroid/app/Application;->attach(Landroid/content/Context;)V
 
-	# Wen hook sar ? 
+	#
 	
     invoke-static {p3}, Lcom/android/internal/util/PixelSpoof;->setProps(Landroid/content/Context;)V
 

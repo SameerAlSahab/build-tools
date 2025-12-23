@@ -11,7 +11,7 @@ if [[ ! -f "$SMALI_FILE" ]]; then
     ERROR_EXIT "Target smali file not found."
 fi
 
-LOG_START "Enabling Multiuser patch..."
+LOG_BEGIN "Enabling Multiuser patch..."
 
 
 if ! sed -i "s/\"tablet\"/\"$CHAR_VALUE\"/g" "$SMALI_FILE"; then

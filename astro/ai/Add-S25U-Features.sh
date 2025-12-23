@@ -43,7 +43,7 @@ ADD_FROM_FW "extra" "system" "priv-app/SpriteWallpaper"  #Used to animate Infini
 ADD_FROM_FW "extra" "system" "priv-app/wallpaper-res"
 
 # Photo Editor & Gallery
-NUKE_BLOAT "PhotoEditor_Full"
+SILENT NUKE_BLOAT "PhotoEditor_Full"
 ADD_FROM_FW "extra" "system" "priv-app/PhotoEditor_AIFull" 
 ADD_FROM_FW "extra" "system" "priv-app/LiveEffectService" 
 ADD_FROM_FW "extra" "system" "priv-app/VideoScan"

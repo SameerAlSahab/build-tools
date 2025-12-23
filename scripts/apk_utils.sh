@@ -24,7 +24,7 @@
 # https://github.com/iBotPeaches/Apktool/issues/1775
 
 
-DEFAULT_SDK="36"                                 #branch sixteen
+DEFAULT_SDK="36"  #branch sixteen
 USABLE_THREADS=$(( $(nproc) - 1 ))
 [[ $USABLE_THREADS -lt 1 ]] && USABLE_THREADS=1
 
@@ -38,8 +38,6 @@ DECOMPILE_RES=true
 
 APK_TO_DECOMPILE_RES=(
      wallpaper-res.apk
-    #"SecSettings.apk"
-    #"SystemUI.apk"
 )
 
 
@@ -210,12 +208,15 @@ DECOMPILE()
         local FLAGS=("-f" "-j" "$USABLE_THREADS" "-o" "$WORK_DIR" "-p" "$FRAMEWORK_DIR" "-t" "$SDK" "-s")
 
         # Resource decompile for listed APKs we declared on top
-        local DECOMPILE_RES=$(GET_FEAT_STATUS "DECOMPILE_RES")
-        local IN_LIST="false"
-        for ITEM in "${APK_TO_DECOMPILE_RES[@]}"; do
-            [[ "$ITEM" == "$NAME" ]] && IN_LIST="true" && break
-        done
-        [[ "$DECOMPILE_RES" != "ENABLED" || "$IN_LIST" != "true" ]] && FLAGS+=("-r")
+		local IN_LIST="false"
+		for ITEM in "${APK_TO_DECOMPILE_RES[@]}"; do
+			[[ "$ITEM" == "$NAME" ]] && IN_LIST="true" && break
+		done
+
+
+if ! GET_FEAT_STATUS "DECOMPILE_RES" || [[ "$IN_LIST" != "true" ]]; then
+    FLAGS+=("-r")
+fi
 
         java -jar "$BIN/apktool/apktool.jar" d "${FLAGS[@]}" "$FILE" > /dev/null 2>&1 || \
             ERROR_EXIT "Decompile failed"
@@ -279,7 +280,7 @@ BUILD()
          -o "$DIST_DIR/$NAME" "$WORK_DIR" 2>&1); then
 
         LOG_WARN "Recompilation failed. Check logs here."
-        # We dont show I: information of progress until get an error.
+        # We dont show I: information of progress until get an error. Same thing -q flag do
         echo "$BUILD_OUTPUT" | sed '/^I:/d' 
 
         return 1
@@ -428,8 +429,6 @@ _APKTOOL_PATCH() {
         return 0
     fi
 
-    LOG_INFO "Total ${#TARGETS[@]} apk/jar's patches found. "
-
 
     for TARGET in "${TARGETS[@]}"; do
         local PATCH_DIRS=(${TARGET_MAP[$TARGET]})
@@ -464,7 +463,7 @@ _APKTOOL_PATCH() {
             RESTORE_TARGET "$TARGET" "$TARGET_FILE" || ERROR_EXIT "Failed to revert changes $TARGET"
         fi
 
-        # Decompile if needed
+
         if [[ ! -d "$WORK_DIR" ]]; then
             local RELATIVE="${TARGET_FILE#$WORKSPACE/}"
             DECOMPILE "$RELATIVE" || ERROR_EXIT "Decompile failed: $TARGET"
@@ -490,12 +489,13 @@ _APKTOOL_PATCH() {
                 (
                     cd "$WORK_DIR" || ERROR_EXIT "Cannot change directory to $WORK_DIR"
 
-                    # Flags for patch
+                    # 
                     # -p1: Strip one leading directory component from file paths.
                     # -s: Work silently unless an error occurs. (Clean output)
                     # -f: Force/Ignore bad Prereq patches, assume unreversed.
                     # -l: Ignore white space changes (line endings, indentation) for better matching.
                     # --dry-run: Test the patch without modifying any files.
+					#
                     patch -p1 -s -f -l --dry-run < "$P" >/dev/null 2>&1
 
                     if [[ $? -eq 0 ]]; then

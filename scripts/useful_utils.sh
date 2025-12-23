@@ -50,6 +50,7 @@ GET_FEAT_STATUS() {
 #
 NUKE_BLOAT() {
     local targets=("$@")
+	# We dont need more partitions as of now
     local partitions=("system" "product" "system_ext")
     local removed_count=0
 
@@ -102,7 +103,6 @@ NUKE_BLOAT() {
         _UPDATE_LOG "No matching packages found." 
     fi
 
-    LOG_END "Removed ${removed_count} packages"
     return 0
 }
 

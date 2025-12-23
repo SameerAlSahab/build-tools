@@ -32,25 +32,17 @@ REPACK_PARTITION() {
     }
 
     local UNPACK_CONF="$model_fs_dir/unpack.conf"
-    local HEADROOM_PERCENT=7 # Default 7% headroom for filesystem overhead
-
-   
-    if [[ -f "$UNPACK_CONF" ]]; then
-        local BASE_FSTYPE=$(grep "^filesystem=" "$UNPACK_CONF" 2>/dev/null | cut -d'=' -f2)
-        [[ "$BASE_FSTYPE" == "ext4" ]] && HEADROOM_PERCENT=3
-    fi
-
-    
+    local HEADROOM_PERCENT=7
+	
     local foldersize_kb=$(du -s -k "$model_fs_dir/$partition_name" | awk '{print $1}')
-    local target_size_kb
-    # For tiny partitions (<~15MB), use a fixed 10% headroom
+	target_size_kb=$((foldersize_kb + foldersize_kb * HEADROOM_PERCENT / 100))
+
     if (( foldersize_kb < 15043 )); then
-        target_size_kb=$((foldersize_kb + foldersize_kb * 10 / 100))
+        target_size_kb=$((foldersize_kb + foldersize_kb * 35 / 100))
     else
         target_size_kb=$((foldersize_kb + foldersize_kb * HEADROOM_PERCENT / 100))
     fi
-
-    # Determine the mount point for SELinux contexts and fs_config
+	
     # System-as-root partitions use "/" as their mount point
     local mount_point="/$partition_name"
     [[ "$partition_name" =~ ^system(_[ab])?$ ]] && mount_point="/"
@@ -75,9 +67,13 @@ REPACK_PARTITION() {
     }
 
     # Remove duplicates and ensure known capabilities exist for consistency  
-    awk '!seen[$0]++' "$fs_config" > "${fs_config}.tmp" && mv "${fs_config}.tmp" "$fs_config"
-    awk '!seen[$0]++' "$file_contexts" > "${file_contexts}.tmp" && mv "${file_contexts}.tmp" "$file_contexts"
-    sed -i '/capabilities=/! s/$/ capabilities=0x0/' "$fs_config"
+	for f in "$fs_config" "$file_contexts"; do
+		awk '!seen[$0]++' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+		sed -i 's/\r//g; s/[^[:print:]]//g; /^$/d' "$f"
+	done
+	
+	sed -i '/^[a-zA-Z0-9\/]/ { /capabilities=/! s/$/ capabilities=0x0/ }' "$fs_config"
+	sed -i 's/  */ /g' "$fs_config"
 
 
     # https://source.android.com/docs/core/architecture/android-kernel-file-system-support
@@ -94,13 +90,21 @@ REPACK_PARTITION() {
                 grep -q "^$partition_name/lost\+found " "$fs_config" || echo "$partition_name/lost+found 0 0 700 capabilities=0x0" >> "$fs_config"
             fi
 
-            # Build ext4 image using mke2fs, populate with e2fsdroid, and then minimize with resize2fs
+            # Build ext4 image using mke2fs, populate with e2fsdroid, and then make size minimium as possible.
             # https://android.googlesource.com/platform/prebuilts/fullsdk-linux/platform-tools/+/83a183b4bced4377eb5817074db82885cfcae393/e2fsdroid
-            RUN_CMD "Building ${partition_name} (ext4)" \
-                "$BIN/android-tools/mke2fs.android -t ext4 -b 4096 -L '$mount_point' -O ^has_journal '$out_dir/$partition_name.img' $block_count && \
+            local build_cmd="
+                $BIN/android-tools/mke2fs.android -t ext4 -b 4096 -L '$mount_point' -O ^has_journal '$out_dir/$partition_name.img' $block_count && \
                 $BIN/android-tools/e2fsdroid -e -T 1230735600 -C '$fs_config' -S '$file_contexts' -a '$mount_point' -f '$model_fs_dir/$partition_name' '$out_dir/$partition_name.img' && \
-                resize2fs -M '$out_dir/$partition_name.img'" || return 1
-            ;;
+                tune2fs -m 0 '$out_dir/$partition_name.img' && \
+                e2fsck -fy '$out_dir/$partition_name.img' && \
+                NEW_BLOCKS=\$(tune2fs -l '$out_dir/$partition_name.img' | awk '/Block count:/ {total=\$3} /Free blocks:/ {free=\$3} END { used=total-free; printf \"%d\", used + (used*0.01) + 10 }') && \
+                resize2fs -f '$out_dir/$partition_name.img' \$NEW_BLOCKS && \
+                truncate -s \$((NEW_BLOCKS * 4096)) '$out_dir/$partition_name.img'
+            "
+
+            RUN_CMD "Building ${partition_name} (ext4)" "$build_cmd" || return 1
+       
+			;;
 
         erofs)
             # https://source.android.com/docs/core/architecture/kernel/erofs
@@ -115,16 +119,9 @@ REPACK_PARTITION() {
             local base_size=$(du -sb "$model_fs_dir/$partition_name" | awk '{print $1}')
             local f2fs_overhead
             local final_margin_percent
-
-            if (( base_size < 15200000 )); then
-                # For tiny partitions , use 2MB overhead + 2% margin
-                f2fs_overhead=$((2 * 1024 * 1024))
-                final_margin_percent=102
-            else
-                # For larger partitions, use 39MB overhead + 5% margin
-                f2fs_overhead=$((39 * 1024 * 1024))
-                final_margin_percent=105
-            fi
+			# TODO: Try make it minimium , as of now 56MB overhead+7% headroom
+                f2fs_overhead=$((56 * 1024 * 1024))
+                final_margin_percent=107
 
             local total_size=$(( (f2fs_overhead + base_size) * final_margin_percent / 100 ))
             local temp_img="$out_dir/${partition_name}_temp.img"
@@ -133,8 +130,8 @@ REPACK_PARTITION() {
             # https://android.googlesource.com/platform/external/f2fs-tools/+/71313114a147ee3fc4a411904de02ea8b6bf7f91/Android.mk
             RUN_CMD "Building ${partition_name} (f2fs)" \
                 "truncate -s $total_size $temp_img && \
-                $mkfs.f2fs -f -O extra_attr,inode_checksum,sb_checksum,compression $temp_img && \
-                $sload.f2fs -f $model_fs_dir/$partition_name -C $fs_config -s $file_contexts -T 1640995200 -t $mount_point -c $temp_img -a lz4 -L 2 && \
+                $BIN/android-tools/make_f2fs -f -O extra_attr,inode_checksum,sb_checksum,compression $temp_img && \
+                $BIN/android-tools/sload_f2fs -f $model_fs_dir/$partition_name -C $fs_config -s $file_contexts -T 1640995200 -t $mount_point -c $temp_img -a lz4 -L 2 && \
                 mv $temp_img $out_dir/$partition_name.img" || return 1
             ;;
 
@@ -171,7 +168,7 @@ BUILD_SUPER_IMAGE() {
     done
 
     
-    (( current_total_size > GROUP_SIZE )) && ERROR_EXIT "Partition sizes ($current_total_size) exceed group limit ($GROUP_SIZE)."
+    (( current_total_size > GROUP_SIZE )) && ERROR_EXIT "Partition sizes ($current_total_size) exceed group limit ($GROUP_SIZE). Please try to reduce size."
 
     # Build the argument list for lpmake
     # https://android.googlesource.com/platform/system/extras/+/master/partition_tools/

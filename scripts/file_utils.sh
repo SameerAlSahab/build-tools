@@ -140,183 +140,112 @@ EXISTS() {
 # ADD_FROM_FW "source" "partition" "path" [dest]
 #
 ADD_FROM_FW() {
-    local source_type="$1"     
-    local src_partition="$2"    
-    local src_path="$3"         
-    local dest_partition="${4:-$src_partition}" 
-
+    local source_type="$1"
+    local src_partition="$2"
+    local src_path="$3"
+    local dest_partition="${4:-$src_partition}"
     
-    if [[ -z "$source_type" ]] || [[ -z "$src_partition" ]] || [[ -z "$src_path" ]]; then
-        ERROR_EXIT "Usage: COPY_FW <source_type> <src_partition> <src_path> [dest_partition]"
-    fi
-
+    [[ -z "$source_type" || -z "$src_partition" || -z "$src_path" ]] && \
+        ERROR_EXIT "Usage: ADD_FROM_FW <source_type> <src_partition> <src_path> [dest_partition]"
     
-    local src_base
-    src_base=$(GET_FW_DIR "$source_type" 2>/dev/null) || {
-        ERROR_EXIT "Failed to resolve source workdir for: $source_type"
-    }
-
     
-    if ! VALIDATE_WORKDIR "$source_type"; then
-        ERROR_EXIT "Source workdir '$source_type' is not ready: $src_base"
-    fi
-
+    VALIDATE_WORKDIR "$source_type" || \
+        ERROR_EXIT "Source workdir '$source_type' is not ready"
     
-    local src_dir="${src_base}/${src_partition}"
-    if [[ "$src_partition" == "system" ]]; then
-        src_dir="${src_base}/system/system"
-    fi
-
-  
-    local dest_dir="${WORKSPACE}/${dest_partition}"
-    if [[ "$dest_partition" == "system" ]]; then
-        dest_dir="${WORKSPACE}/system/system"
-    fi
-
+   
+    local src_dir dest_dir
+    src_dir=$(GET_PARTITION_PATH "$src_partition" "$source_type") || \
+        ERROR_EXIT "Failed to resolve source partition: $src_partition"
     
-    if [[ ! -d "$src_dir" ]]; then
-        ERROR_EXIT "Source directory does not exist: $src_dir"
-        return 1
-    fi
-
-    if [[ ! -d "$dest_dir" ]]; then
-        ERROR_EXIT "Destination directory does not exist: $dest_dir"
-        return 1
-    fi
-
+    dest_dir=$(GET_PARTITION_PATH "$dest_partition") || \
+        ERROR_EXIT "Failed to resolve destination partition: $dest_partition"
+    
     
     local clean_src_path
     clean_src_path=$(_SANITIZE_PATH "$src_path")
     local full_src="${src_dir}/${clean_src_path}"
     local full_dest="${dest_dir}/${clean_src_path}"
-
     
-    if [[ ! -e "$full_src" ]] && [[ ! -L "$full_src" ]]; then
-        LOG "Source file does not exist: $full_src"
-		return 0
-    fi
-
     
+    [[ ! -e "$full_src" && ! -L "$full_src" ]] && {
+        LOG_WARN "Source file does not exist: $full_src"
+        return 0
+    }
+    
+   
     local dest_parent
     dest_parent=$(dirname "$full_dest")
-    if [[ ! -d "$dest_parent" ]]; then
-        mkdir -p "$dest_parent" || {
-            ERROR_EXIT "Failed to create destination directory: $dest_parent"
-        }
-    fi
-
+    [[ ! -d "$dest_parent" ]] && mkdir -p "$dest_parent"
     
-    if [[ -e "$full_dest" ]]; then
-        rm -rf "$full_dest" 2>/dev/null
-    fi
-
-    
-    if cp -r "$full_src" "$full_dest" 2>/dev/null; then
-        return 0
-    else
+   
+    rm -rf "$full_dest" 2>/dev/null
+    cp -r "$full_src" "$full_dest" 2>/dev/null || \
         ERROR_EXIT "Failed copying ${src_partition}/${clean_src_path} from ${source_type}"
-    fi
 }
 
-# 
+
+#
 # Usage: ADD "partition_name" "source_path" "relative_dest_path" [log_label]
 #
-
 ADD() {
     local partition="$1"
     local src_path="$2"
     local dest_rel_path="$3"
-    local log_label="${4:-$(basename "$src_path")}" 
-
-   
+    local log_label="${4:-$(basename "$src_path")}"
+    
     local part_root
     part_root=$(GET_PARTITION_PATH "$partition") || {
-        ERROR_EXIT "COPY failed: Could not resolve partition '$partition'."
-        return 1
+        ERROR_EXIT "Add failed: Could not get partition path '$partition'."
     }
-
     
     local full_dest="${part_root}/${dest_rel_path}"
     
-  
-    if [[ "$src_path" == "$full_dest" ]]; then
-        LOG_WARN "Source and destination are identical. Skipping."
-        return 0
-    fi
-
-
+    
+    [[ "$src_path" == "$full_dest" ]] && return 0
+    
+   
     if [[ ! -e "$src_path" ]]; then
         local split_files=()
         
-       
         if ls "${src_path}."* >/dev/null 2>&1; then
             split_files=("${src_path}."*)
         elif ls "${src_path}_"* >/dev/null 2>&1; then
             split_files=("${src_path}_"*)
         fi
-
+        
         if [[ ${#split_files[@]} -gt 0 ]]; then
-            
-            if [[ -d "$full_dest" ]]; then
-                full_dest="${full_dest}/$(basename "$src_path")"
-            fi
-
+            [[ -d "$full_dest" ]] && full_dest="${full_dest}/$(basename "$src_path")"
             mkdir -p "$(dirname "$full_dest")"
-           
-            if bash -c "cat ${src_path}.* > \"$full_dest\" 2>/dev/null || cat ${src_path}_* > \"$full_dest\""; then
-                LOG_END "Merge complete."
-                return 0
-            else
+            
+            bash -c "cat ${src_path}.* > \"$full_dest\" 2>/dev/null || cat ${src_path}_* > \"$full_dest\" 2>/dev/null" || \
                 ERROR_EXIT "Failed to merge split files."
-                return 1
-            fi
+            return 0
         fi
         
         ERROR_EXIT "Source not found: $src_path"
-        return 1
     fi
-
-   
+    
+  
     if [[ -d "$src_path" ]]; then
-     
         mkdir -p "$full_dest"
-
-        LOG_INFO "Merging directory: $log_label -> $partition/$dest_rel_path"
+        LOG_INFO "Adding: $log_label"
         
-        
-        if rsync -a --no-owner --no-group "${src_path}/" "$full_dest/"; then
-            LOG_END "Directory merged."
-            return 0
-        else
+        rsync -a --no-owner --no-group "${src_path}/" "$full_dest/" || \
             ERROR_EXIT "Directory merge failed."
-            return 1
-        fi
+        return 0
     fi
-
-   
+    
+ 
     if [[ -f "$src_path" ]]; then
+        [[ -d "$full_dest" ]] && full_dest="${full_dest}/$(basename "$src_path")"
+        [[ -d "$full_dest" ]] && ERROR_EXIT "Target conflict: Cannot overwrite directory with file."
         
-        if [[ -d "$full_dest" ]]; then
-            full_dest="${full_dest}/$(basename "$src_path")"
-        fi
-
-        if [[ -d "$full_dest" ]]; then
-             ERROR_EXIT "Target conflict: Cannot overwrite directory '$full_dest' with file '$src_path'."
-             return 1
-        fi
-
         mkdir -p "$(dirname "$full_dest")"
-
-        LOG_INFO "Copying: $log_label"
-        if cp -f "$src_path" "$full_dest"; then
-            LOG_END "File installed."
-            return 0
-        else
-            ERROR_EXIT "File copy failed."
-            return 1
-        fi
+        LOG_INFO "Adding: $log_label"
+        
+        cp -f "$src_path" "$full_dest" || ERROR_EXIT "Cannot add file."
+        return 0
     fi
-
+    
     ERROR_EXIT "Unknown source type: $src_path"
-    return 1
 }

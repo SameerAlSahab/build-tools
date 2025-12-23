@@ -33,6 +33,15 @@ export BIN
 PROJECT_DIR="$ASTROROM/astro"
 OBJECTIVES_DIR="$ASTROROM/objectives"
 
+available_devices=()
+
+if [[ -d "$OBJECTIVES_DIR" ]]; then
+    for d in "$OBJECTIVES_DIR"/*/; do
+        [[ -d "$d" ]] || continue
+        available_devices+=("$(basename "$d")")
+    done
+fi
+
 export WORKDIR="$ASTROROM/firmware/unpacked"
 WORKSPACE="$ASTROROM/workspace"
 DIROUT="$ASTROROM/out"
@@ -42,11 +51,9 @@ MARKER_FILE="$WORKSPACE/.build_markers"
 PLATFORM=""
 CODENAME=""
 
-
 for util in "$ASTROROM"/scripts/*.sh; do
     [[ -f "$util" ]] && source "$util"
 done
-
 
 
 EXEC_SCRIPT() {
@@ -82,15 +89,23 @@ EXEC_SCRIPT() {
 
 _BUILD_WORKFLOW() {
 
+if [[ -z "$device" ]]; then
+    [[ ! -d "$OBJECTIVES_DIR" ]] && \
+        ERROR_EXIT "OBJECTIVES_DIR not found: $OBJECTIVES_DIR"
 
-    if [[ -z "$device" ]]; then
-        local devices=()
-        for d in "$OBJECTIVES_DIR"/*/; do
-            devices+=("$(basename "$d")")
-        done
-        local choice=$(_CHOICE "Available objectives" "${devices[@]}")
-        device="${devices[choice-1]}"
-    fi
+    local devices=()
+    for d in "$OBJECTIVES_DIR"/*/; do
+        [[ -d "$d" ]] || continue
+        devices+=("$(basename "$d")")
+    done
+
+    [[ ${#devices[@]} -eq 0 ]] && \
+        ERROR_EXIT "No objectives found in $OBJECTIVES_DIR"
+
+    local choice=$(_CHOICE "Available objectives" "${devices[@]}")
+    device="${devices[choice-1]}"
+fi
+
 
     OBJECTIVE="$OBJECTIVES_DIR/$device"
     export OBJECTIVE
@@ -142,27 +157,29 @@ done
 show_usage() {
 cat <<EOF
 
-AstroROM Build v${ROM_VERSION}
+AstroROM Build Tool v${ROM_VERSION}
+Copyright (c) 2025 Sameer Al Sahab
 
 USAGE:
-  build.sh <command> [options] [device]
+  sudo ./build.sh [options] [command] [device]
 
 COMMANDS:
-  build [device]        Build ROM for a device (will ask if not given)
-  clean [options]       Remove build artifacts
-  help                  Show this help message
+  -b, --build [device]      Build ROM for a specific device.
+                            If [device] is not given, a selection menu will appear.
+  -c, --clean [option]      Cleanup build artifacts.
+  -h, --help                Show usage.
 
 CLEAN OPTIONS:
-  -f, --firmware        Remove firmware downloads
-  -w, --workspace       Remove workspace
-      --workdir         Remove unpacked firmware
-      --all             Remove everything
+  -f, --firmware            Remove downloaded firmware files.
+  -w, --workspace           Remove the workspace directory.
+  --workdir                 Remove the unpacked firmware directory.
+  --all                     Perform a full cleanup (firmware + workspace + workdir).
 
-EXAMPLES:
-  sudo ./build.sh build x1q
-  sudo ./build.sh build
-  sudo ./build.sh clean --workspace
-  sudo ./build.sh clean --all
+OPTIONS:
+  -d, --debug               Enable debug mode.
+
+AVAILABLE OBJECTIVES:
+  ${available_devices[*]:-None found in $OBJECTIVES_DIR}
 
 NOTE:
   Root privileges are required for build and clean operations.
@@ -215,10 +232,13 @@ while [[ $# -gt 0 ]]; do
             DEBUG_BUILD=true
             shift 
             ;;
-        --build|-b)
-            
-            device="$2"
-            shift 2 
+		--build|-b)
+			if [[ -n "$2" && "$2" != -* ]]; then
+				device="$2"
+				shift 2
+			else
+				shift 1
+		    fi
             ;;
         --clean|-c)
           
