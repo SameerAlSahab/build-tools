@@ -203,7 +203,7 @@ CREATE_FLASHABLE_ZIP() {
     local super_img="${DIROUT}/super.img"
     local build_date=$(date +%Y%m%d)
     local build_dir="${DIROUT}/zip_build"
-    local zip_path="/tmp/AstroROM_${STOCK_MODEL}_v${ROM_VERSION}_${build_date}.zip"
+    local zip_path="$DIROUT/tmp{/STOCK_MODEL}_v${ROM_VERSION}_${build_date}.zip"
     local signed_zip_path="${DIROUT}/AstroROM_${STOCK_MODEL}_v${ROM_VERSION}_${build_date}_signed.zip"
 
     [[ -f "$super_img" ]] || ERROR_EXIT "super.img missing."
