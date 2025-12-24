@@ -1,3 +1,5 @@
+# https://github.com/ShaDisNX255/NcX_Stock/commit/c2cc85818df4fe040b4f89ca8f9b78e939b211b4
+
 FILE smali_classes2/com/android/server/wm/WindowState.smali
 REPLACE .method public final isSecureLocked()Z
     .locals 1

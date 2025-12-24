@@ -23,12 +23,11 @@
 REPACK_PARTITION() {
     local partition_name="$1"
     local target_fs="$2"
-    local compression="${3:-lz4}" # Default to lz4, though not explicitly used in all cases
-    local out_dir="$4"
-    local model_fs_dir="$5"
+    local out_dir="$3"
+    local model_fs_dir="$4"
 
     [[ ! -d "$model_fs_dir/$partition_name" ]] && {
-        ERROR_EXIT "Partition source not found: $model_fs_dir/$partition_name"
+        ERROR_EXIT "Partition folder not found in $model_fs_dir/$partition_name"
     }
 
     local UNPACK_CONF="$model_fs_dir/unpack.conf"
@@ -158,7 +157,6 @@ BUILD_SUPER_IMAGE() {
     local valid_partitions=()
     local current_total_size=0
 
-    # Find all valid partition images and calculate their total size
     for part in $PARTITIONS; do
         local img="$out_dir/${part}.img"
         if [[ -f "$img" ]]; then
@@ -167,7 +165,6 @@ BUILD_SUPER_IMAGE() {
         fi
     done
 
-    
     (( current_total_size > GROUP_SIZE )) && ERROR_EXIT "Partition sizes ($current_total_size) exceed group limit ($GROUP_SIZE). Please try to reduce size."
 
     # Build the argument list for lpmake
@@ -180,7 +177,6 @@ BUILD_SUPER_IMAGE() {
         --output "$out_dir/super.img"
     )
 
-    # Add each partition to the argument list
     for part in "${valid_partitions[@]}"; do
         local p_size=$(stat -c%s "$out_dir/${part}.img")
         lp_args+=(--partition "${part}:readonly:${p_size}:${GROUP_NAME}")
@@ -211,9 +207,6 @@ CREATE_FLASHABLE_ZIP() {
 
     [[ -f "$super_img" ]] || ERROR_EXIT "super.img missing."
     COMMAND_EXISTS "7z" || ERROR_EXIT "7z tool not found."
-
-    LOG "Preparing ROM zip.."
-
    
     rm -rf "$build_dir" && mkdir -p "$build_dir"
 
@@ -232,11 +225,9 @@ CREATE_FLASHABLE_ZIP() {
             "$updater"
     fi
 
-
-    RUN_CMD "Zipping ROM" \
+    RUN_CMD "Building ROM zip" \
         "cd '$build_dir' && 7z a -tzip -mx=6 '$zip_path' ."
 
-   
     rm -rf "$build_dir"
 
     LOG_INFO "Signing ZIP"
@@ -257,30 +248,22 @@ CREATE_FLASHABLE_ZIP() {
 }
 
 
-#
-# Args:
-#   $1: target_fs (The filesystem type to use for all partitions, e.g., "erofs")
-#
 REPACK_ROM() {
     local target_fs="$1"
     local out_dir="${DIROUT}"
 
-    [[ -z "$WORKSPACE" ]] && ERROR_EXIT "WORKSPACE environment variable is not set."
-
-  
     if [[ -d "$out_dir" ]]; then
         rm -rf "$out_dir"/*
     else
         mkdir -p "$out_dir"
     fi
 
-  
     for part_dir in "$WORKSPACE"/*/; do
         local name=$(basename "$part_dir")
       
         [[ "$name" =~ ^(config|lost\+found)$ ]] && continue
 
-        REPACK_PARTITION "$name" "$target_fs" "lz4" "$out_dir" "$WORKSPACE"
+        REPACK_PARTITION "$name" "$target_fs" "$out_dir" "$WORKSPACE"
     done
 
     # Check if we should create a full zip or just the unpacked images for debugging. For instance , fastboot or recovery flash.

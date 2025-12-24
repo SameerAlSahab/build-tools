@@ -1,3 +1,4 @@
+# Based on Salvo's https://github.com/salvogiangri/UN1CA/blob/sixteen/unica/mods/settings/smali/system/framework/framework.jar/0002-Introduce-SamsungPropsHooks.patch'
 
 FILE smali/android/app/ApplicationPackageManager.smali
 REPLACE .method public whitelist hasSystemFeature(Ljava/lang/String;I)Z

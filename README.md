@@ -49,6 +49,10 @@ To create a universal, hassle-free ROM modification solution that will auto patc
 - Google Photos with unlimited original quality storage
 - All Pixel-exclusive features available
 
+### Device Specific
+- 4K/120FPS & log video
+- Zoom slider and flagship camera features 
+- Adaptive refresh rate etc.
 
 ---
 
@@ -56,7 +60,7 @@ To create a universal, hassle-free ROM modification solution that will auto patc
 
 This project wouldn't be possible without the incredible work of:
 
-- **[Salvo Giangreco](https://github.com/salvogiangri)** - The mind behind the **[UN1CA](https://github.com/salvogiangri/UN1CA)** project and a true leader in the Samsung community. The initial ideas and inspiration that made AstroROM possible.
+- **[Salvo Giangreco](https://github.com/salvogiangri)** - The mind behind the **[UN1CA](https://github.com/salvogiangri/UN1CA)** project and a true leader in the Samsung community. The initial ideas and inspiration that made AstroROM possible.His UN1CA 
 - **[BlassGO](https://github.com/BlassGO)** - For the Dynamic Installer.
 - **[Danda420](https://github.com/Danda420)** - For his genfscontexts.
 - **[jesec](https://github.com/jesec)** - For samfirm.js , which we use to download the latest firmwares.

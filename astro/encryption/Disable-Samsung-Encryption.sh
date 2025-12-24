@@ -1,6 +1,6 @@
 #
-#  Multi-Disabler for Samsung Devices
-#  Originally by Ian Macdonald, enhanced by afaneh92
+#
+# by Ian Macdonald, enhanced by afaneh92
 #
 #  Disables:
 #  - File-Based Encryption (FBE)

@@ -3,27 +3,42 @@ setdefault   import_addons        on
 setdefault   extraction_speed     default
 
 #AstroROM script starts here:
- 
+         o           o__ __o    ____o__ __o____   o__ __o         o__ __o
+        <|>         /v     v\    /   \   /   \   <|     v\       /v     v\
+        / \        />       <\        \o/        / \     <\     />       <\
+      o/   \o     _\o____              |         \o/     o/   o/           \o
+     <|__ __|>         \_\__o__       < >         |__  _<|   <|             |>
+     /       \               \         |          |       \   \\           //
+   o/         \o   \         /         o         <o>       \o   \         /
+  /v           v\   o       o         <|          |         v\   o       o
+ />             <\  <\__ __/>         / \        / \         <\  <\__ __/>
+
 
     ASTRO ROM  __ROM_VERSION__  FOR __MODEL_NAME__ 
            
 	Build: __BUILD_DATE__                      
 
-	
-	
+
+# Check device
 ui_print "Checking device compatibility..."
 
 device_codename=$(getprop ro.product.vendor.device)
 if [ "$device_codename" != "__CODENAME__" ]; then
     abort "Error: This ROM is for __MODEL_NAME__ (__CODENAME__ only). Detected: $device_codename"
+else
+    ui_print "Device is compatible."
 fi
 
+
+
+# Install
    ui_print " Installing ROM... "
    
    update_zip super.img $(find_block super)
 
-   ui_print " Done... "
-   
+
+
+# CSC Mods
    try_mount -rw /optics
    try_mount -rw /prism
    try_mount -rw /omr
@@ -35,6 +50,7 @@ fi
    ui_print "AstroROM successfully installed."
 
 
+# Ending
    ui_print " If you want to reboot to recovery, press vol + "
    ui_print " If you want to close the installer, press vol - "
    if $yes; then

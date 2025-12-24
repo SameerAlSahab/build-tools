@@ -74,10 +74,7 @@ EXEC_SCRIPT() {
 	if [[ "$cached_hash" == "$current_hash" ]]; then
         LOG_INFO "Skipping already applied script: $rel_path"
         return 0
-    else
-        LOG_WARN "Script changes detected: Reapplying.. $rel_path"
     fi
-
 
     LOG_INFO "Applying: $rel_path"
 
@@ -112,7 +109,6 @@ if [[ -z "$device" ]]; then
     local choice=$(_CHOICE "Available objectives" "${devices[@]}")
     device="${devices[choice-1]}"
 fi
-
 
     OBJECTIVE="$OBJECTIVES_DIR/$device"
     export OBJECTIVE
