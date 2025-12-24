@@ -1,4 +1,7 @@
-# Based on Salvo's https://github.com/salvogiangri/UN1CA/blob/sixteen/unica/mods/settings/smali/system/framework/framework.jar/0002-Introduce-SamsungPropsHooks.patch'
+# PixelSpoof is Based on Salvo's https://github.com/salvogiangri/UN1CA/blob/sixteen/unica/mods/settings/smali/system/framework/framework.jar/0002-Introduce-SamsungPropsHooks.patch'
+# 
+# Gameprops taken from https://github.com/salvogiangri/UN1CA/blob/sixteen/unica/mods/gamesprops/customize.sh
+#
 
 FILE smali/android/app/ApplicationPackageManager.smali
 REPLACE .method public whitelist hasSystemFeature(Ljava/lang/String;I)Z
@@ -115,9 +118,10 @@ REPLACE .method public static whitelist newApplication(Ljava/lang/Class;Landroid
     invoke-virtual {p0, p1}, Landroid/app/Application;->attach(Landroid/content/Context;)V
     
     # 
-    
     invoke-static {p1}, Lcom/astrorom/utils/PixelSpoof;->setProps(Landroid/content/Context;)V
-
+    
+    invoke-static {p1}, Lio/mesalabs/unica/GamesPropsUtils;->setProps(Landroid/content/Context;)V
+    #
     return-object p0
 
 END
@@ -147,9 +151,11 @@ REPLACE .method public whitelist newApplication(Ljava/lang/ClassLoader;Ljava/lan
     invoke-virtual {p0, p3}, Landroid/app/Application;->attach(Landroid/content/Context;)V
 
 	# 
-	
     invoke-static {p3}, Lcom/astrorom/utils/PixelSpoof;->setProps(Landroid/content/Context;)V
-
+    
+    invoke-static {p3}, Lio/mesalabs/unica/GamesPropsUtils;->setProps(Landroid/content/Context;)V
+    #
+    
     return-object p0
 
 END
