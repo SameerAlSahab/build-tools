@@ -173,6 +173,7 @@ BUILD_SUPER_IMAGE() {
         --device-size "$SUPER_SIZE"
         --metadata-size "$METADATA_SIZE"
         --metadata-slots "$METADATA_SLOTS"
+        --sparse
         --group "$GROUP_NAME:$GROUP_SIZE"
         --output "$out_dir/super.img"
     )
@@ -202,7 +203,7 @@ CREATE_FLASHABLE_ZIP() {
     local super_img="${DIROUT}/super.img"
     local build_date=$(date +%Y%m%d)
     local build_dir="${DIROUT}/zip_build"
-    local zip_path="${DIROUT}/AstroROM_${STOCK_MODEL}_v${ROM_VERSION}_${build_date}.zip"
+    local zip_path="/tmp/AstroROM_${STOCK_MODEL}_v${ROM_VERSION}_${build_date}.zip"
     local signed_zip_path="${DIROUT}/AstroROM_${STOCK_MODEL}_v${ROM_VERSION}_${build_date}_signed.zip"
 
     [[ -f "$super_img" ]] || ERROR_EXIT "super.img missing."
@@ -226,12 +227,11 @@ CREATE_FLASHABLE_ZIP() {
     fi
 
     RUN_CMD "Building ROM zip" \
-        "cd '$build_dir' && 7z a -tzip -mx=6 '$zip_path' ."
+        "cd '$build_dir' && 7z a -tzip -mx=5 '$zip_path' ."
 
     rm -rf "$build_dir"
 
     LOG_INFO "Signing ZIP"
-
     # Sign the ZIP with AOSP test keys 
     # https://android.googlesource.com/platform/prebuilts/sdk/+/master/tools/lib/signapk.jar?autodive=0%2F
     java -jar "$BIN/signapk/signapk.jar" -w \
@@ -240,7 +240,6 @@ CREATE_FLASHABLE_ZIP() {
         "$zip_path" \
         "$signed_zip_path" || ERROR_EXIT "ZIP signing failed"
 
-    
     rm -f "$zip_path"
 
     LOG_END "Flashable zip created at $(basename "$signed_zip_path")"

@@ -3,20 +3,18 @@ setdefault   import_addons        on
 setdefault   extraction_speed     default
 
 #AstroROM script starts here:
-         o           o__ __o    ____o__ __o____   o__ __o         o__ __o
-        <|>         /v     v\    /   \   /   \   <|     v\       /v     v\
-        / \        />       <\        \o/        / \     <\     />       <\
-      o/   \o     _\o____              |         \o/     o/   o/           \o
-     <|__ __|>         \_\__o__       < >         |__  _<|   <|             |>
-     /       \               \         |          |       \   \\           //
-   o/         \o   \         /         o         <o>       \o   \         /
-  /v           v\   o       o         <|          |         v\   o       o
- />             <\  <\__ __/>         / \        / \         <\  <\__ __/>
-
-
-    ASTRO ROM  __ROM_VERSION__  FOR __MODEL_NAME__ 
-           
-	Build: __BUILD_DATE__                      
+ui_print ""
+ui_print "      /^         /^^ ^^  /^^^ /^^^^^^/^^^^^^^        /^^^^"
+ui_print "     /^ ^^     /^^    /^^     /^^    /^^    /^^    /^^    /^^"
+ui_print "    /^  /^^     /^^           /^^    /^^    /^^  /^^        /^^"
+ui_print "   /^^   /^^      /^^         /^^    /^ /^^      /^^        /^^"
+ui_print "  /^^^^^^ /^^        /^^      /^^    /^^  /^^    /^^        /^^"
+ui_print " /^^       /^^ /^^    /^^     /^^    /^^    /^^    /^^     /^^"
+ui_print "/^^         /^^  /^^ ^^       /^^    /^^      /^^    /^^^^"
+ui_print " "
+ui_print "ASTRO ROM  __ROM_VERSION__  FOR __MODEL_NAME__  "
+ui_print ""
+ui_print "Build: __BUILD_DATE__"
 
 
 # Check device
@@ -32,9 +30,9 @@ fi
 
 
 # Install
-   ui_print " Installing ROM... "
+   ui_print "Installing ROM... "
    
-   update_zip super.img $(find_block super)
+   update_zip -sparse super.img $(find_block super)
 
 
 

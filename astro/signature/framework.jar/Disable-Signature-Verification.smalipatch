@@ -1,4 +1,4 @@
-https://github.com/ShaDisNX255/NcX_Stock/commit/e9fca1cedf2405c9f84dc2ee4aafa018e59de464
+# https://github.com/ShaDisNX255/NcX_Stock/commit/e9fca1cedf2405c9f84dc2ee4aafa018e59de464
 
 FILE smali_classes4/android/util/apk/ApkSignatureVerifier.smali
 REPLACE .method public static blacklist getMinimumSignatureSchemeVersionForTargetSdk(I)I

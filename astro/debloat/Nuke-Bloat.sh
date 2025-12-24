@@ -11,8 +11,6 @@ declare -a BLOAT_TARGETS=(
     # Factory/Test
     "AutomationTest_FB" "DRParser" "FactoryCameraFB" 
 	
-
-    
     # Facebook
     "FBAppManager_NS" "FBInstaller_NS" "FBServices" 
     
