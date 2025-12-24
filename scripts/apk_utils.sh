@@ -34,10 +34,12 @@ DO_SIGN_APK="false"  # coz disabled apk signature verification on framework.jar 
 CERT_PEM=""
 CERT_PK8=""
 
-DECOMPILE_RES=true
+DECOMPILE_RES=false
 
 APK_TO_DECOMPILE_RES=(
      wallpaper-res.apk
+	 SecSettings.apk
+	 SystemUI.apk
 )
 
 
@@ -244,83 +246,94 @@ fi
 }
 
 
-BUILD()
-{
+BUILD() {
     local FILE="$1"
+    
     [[ -z "$FILE" ]] && ERROR_EXIT "No file specified"
-    [[ "$FILE" != /* ]] && FILE="$WORKSPACE/$FILE"
+    
+    if [[ "$FILE" != /* ]]; then
+        FILE="$WORKSPACE/$FILE"
+    fi
 
-    local NAME=$(basename "$FILE")
+    local NAME
+    NAME=$(basename "$FILE")
     local EXT="${NAME##*.}"
-    local DIR=$(dirname "$FILE")
+    local DIR
+    DIR=$(dirname "$FILE")
     local WORK_DIR="$DIR/${NAME}_decompiled"
     local DIST_DIR="$WORK_DIR/dist"
+    local BUILT_FILE="$DIST_DIR/$NAME"
 
-    [[ ! -d "$WORK_DIR" ]] && ERROR_EXIT "Decompiled folder not found"
+    [[ ! -d "$WORK_DIR" ]] && ERROR_EXIT "Decompiled folder not found: $WORK_DIR"
 
     LOG_INFO "Building $NAME"
 
     local API="$DEFAULT_SDK"
-    [[ -f "$WORK_DIR/.meta/api" ]] && API=$(cat "$WORK_DIR/.meta/api")
+    if [[ -f "$WORK_DIR/.meta/api" ]]; then
+        API=$(cat "$WORK_DIR/.meta/api")
+    fi
 
     mkdir -p "$DIST_DIR"
 
-    local FLAGS=("-j" "$USABLE_THREADS" "-p" "$FRAMEWORK_DIR")
-    
-	if [[ "$EXT" == "apk" ]]; then
-	
-    # -c: Copies original META-INF and manifest
-    FLAGS+=("-c")
+
+    local APKTOOL_FLAGS=(
+        "b"
+        "-api" "$API"
+        "-j" "$USABLE_THREADS"
+        "-p" "$FRAMEWORK_DIR"
+        "-o" "$BUILT_FILE"
+    )
+
+    if [[ "$EXT" == "apk" ]]; then
+        # -c: Copies original META-INF and manifest (Preserves original structure)
+        APKTOOL_FLAGS+=("-c") 
     fi
 
     local BUILD_OUTPUT
-
-   
-    if ! BUILD_OUTPUT=$(java -jar "$BIN/apktool/apktool.jar" b -api "$API" "${FLAGS[@]}" \
-         -o "$DIST_DIR/$NAME" "$WORK_DIR" 2>&1); then
-
-        LOG_WARN "Recompilation failed. Check logs here."
+    if ! BUILD_OUTPUT=$(java -jar "$BIN/apktool/apktool.jar" "${APKTOOL_FLAGS[@]}" "$WORK_DIR" 2>&1); then
+        LOG_WARN "Recompilation failed. Check logs below:"
+		
         # We dont show I: information of progress until get an error. Same thing -q flag do
         echo "$BUILD_OUTPUT" | sed '/^I:/d' 
-
         return 1
     fi
 
 
-    # Sign APK if enabled
-    if [[ "$DO_SIGN_APK" == "true" && "$EXT" == "apk" ]]; then
-        local UNSIGNED="$DIST_DIR/${NAME}.unsigned"
-        mv "$DIST_DIR/$NAME" "$UNSIGNED"
-        java -jar "$BIN/signapk/signapk.jar" "$CERT_PEM" "$CERT_PK8" \
-            "$UNSIGNED" "$DIST_DIR/$NAME" > /dev/null 2>&1 || ERROR_EXIT "Sign failed"
-        rm -f "$UNSIGNED"
+    if [[ "$EXT" == "apk" ]]; then
+            # Sign the apk if turned on
+        if [[ "$DO_SIGN_APK" == "true" ]]; then
+            LOG_INFO "Signing APK..."
+            local UNSIGNED="$DIST_DIR/${NAME}.unsigned"
+            mv "$BUILT_FILE" "$UNSIGNED"
+            
+            if ! java -jar "$BIN/signapk/signapk.jar" "$CERT_PEM" "$CERT_PK8" \
+                "$UNSIGNED" "$BUILT_FILE" > /dev/null 2>&1; then
+                ERROR_EXIT "Sign failed"
+            fi
+            rm -f "$UNSIGNED"
+        else
+            # Zipalign APKs
+		    # https://developer.android.com/tools/zipalign
+            local ALIGNED="$DIST_DIR/aligned.apk"
+            if zipalign -p -f 4 "$BUILT_FILE" "$ALIGNED" > /dev/null 2>&1; then
+                mv -f "$ALIGNED" "$BUILT_FILE"
+            else
+                ERROR_EXIT "Apk Zipalign failed."
+            fi
+        fi
     fi
-
-    local BUILT_FILE="$DIST_DIR/$NAME"
 
     # Add missing resources for JARs [Android14+ bug] See DECOMPILE function for more info.
-    [[ "$EXT" == "jar" && -d "$WORK_DIR/__res__" ]] && \
+    if [[ "$EXT" == "jar" && -d "$WORK_DIR/__res__" ]]; then
+        LOG_INFO "Injecting raw resources (Android 14+ fix)..."
         (cd "$WORK_DIR/__res__" && zip -qr "$BUILT_FILE" .)
-
-
-
-# Zipalign APKs
-# https://developer.android.com/tools/zipalign
-    if [[ "$EXT" == "apk" ]]; then
-        local ALIGNED="$DIST_DIR/aligned.apk"
-
-        #
-        # -P : Aligns native shared libraries (.so files) to a 16KiB/4kib page boundary.
-        # -f: Force overwrite of the output file.
-        # -f value: Ensures all other files are aligned to <value>-byte boundaries.
-        #
-
-        zipalign -p 4 "$BUILT_FILE" "$ALIGNED" > /dev/null 2>&1
-        [[ -f "$ALIGNED" ]] && mv -f "$ALIGNED" "$BUILT_FILE"
     fi
 
-    mv -f "$DIST_DIR/$NAME" "$FILE"
+    mv -f "$BUILT_FILE" "$FILE"
     rm -rf "$WORK_DIR"
+
+    rm -f "$DIR/$NAME.prof" "$DIR/$NAME.bprof"
+    rm -rf "$DIR/oat" 
 
     LOG_END "Built $NAME"
     return 0

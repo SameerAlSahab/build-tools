@@ -128,10 +128,6 @@ RUN_CMD() {
     local desc="$1"
     shift
     local cmd="$@"
-    
-    local caller_file="${BASH_SOURCE[1]##*/}"
-    local caller_line="${BASH_LINENO[0]}"
-    
     local start_ts
     local end_ts
     local duration
@@ -139,16 +135,15 @@ RUN_CMD() {
     local spin='-\|/'
     local i=0
     local pid
-    
+
     start_ts=$(date +%s)
     tmp_log=$(mktemp)
-    
-    
-    echo -ne "${BLUE}[*]${NC}  $desc... "
-    
+
+    echo -ne "${GRAY}[$(_TIMESTAMP)]${NC} ${BLUE}[*]${NC}  $desc... "
+
     eval "$cmd" > "$tmp_log" 2>&1 &
     pid=$!
-    
+
     if ! IS_GITHUB_ACTIONS; then
         tput civis 2>/dev/null
         while kill -0 "$pid" 2>/dev/null; do
@@ -162,30 +157,37 @@ RUN_CMD() {
         printf "${CYAN}[|]${NC}"
         wait "$pid"
     fi
-    
+
     wait "$pid"
     local exit_code=$?
-    
     end_ts=$(date +%s)
     duration=$(_GET_DURATION $start_ts $end_ts)
-    
+
     if [ $exit_code -eq 0 ]; then
+        printf "\b${GREEN}[OK]${NC} (${duration})\n"
         rm "$tmp_log"
     else
+        printf "\b${RED}[FAIL]${NC}\n"
+
         echo
-        printf "${RED}>> ERROR AT: ${YELLOW}%s${RED} LINE: ${YELLOW}%s${NC}\n" "$caller_file" "$caller_line"
-        printf "${RED}>> COMMAND : ${CYAN}%s${NC}\n" "$cmd"
+        printf "${RED}>> ERROR LOG OUTPUT:${NC}\n"
         _PRINT_DIVIDER "="
-        
+       
         tail -n 20 "$tmp_log" | while read -r line; do
-            printf "${RED}| %s${NC}\n" "$line"
+             printf "${RED}| %s${NC}\n" "$line"
         done
-        
         _PRINT_DIVIDER "="
         echo
+
         rm "$tmp_log"
-        ERROR_EXIT "Build failed during: $desc (at $caller_file:$caller_line)" $exit_code
+
+        ERROR_EXIT "Build failed during: $desc" $exit_code
     fi
+}
+
+# Execute command silently
+SILENT() {
+    "$@" > /dev/null 2>&1
 }
 
 # Execute command silently

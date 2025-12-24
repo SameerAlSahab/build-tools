@@ -70,7 +70,14 @@ EXEC_SCRIPT() {
     [[ -z "$current_hash" ]] && ERROR_EXIT "Hash failed: $rel_path"
 
     cached_hash=$(grep -F "$script_file" "$marker" 2>/dev/null | awk '{print $2}')
-    [[ "$cached_hash" == "$current_hash" ]] && return 0
+	
+	if [[ "$cached_hash" == "$current_hash" ]]; then
+        LOG_INFO "Skipping already applied script: $rel_path"
+        return 0
+    else
+        LOG_WARN "Script changes detected: Reapplying.. $rel_path"
+    fi
+
 
     LOG_INFO "Applying: $rel_path"
 
@@ -149,8 +156,10 @@ done
     _APKTOOL_PATCH || ERROR_EXIT "APK/JAR patching failed"
 
     REPACK_ROM "$FILESYSTEM" || ERROR_EXIT "Repack failed"
-
-    LOG_END "Build completed: $device"
+    
+	rm -rf "$WORKSPACE"
+	
+    LOG_END "Build completed for $device"
 }
 
 

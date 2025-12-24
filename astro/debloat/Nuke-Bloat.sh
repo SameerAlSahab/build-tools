@@ -6,11 +6,13 @@ declare -a BLOAT_TARGETS=(
     "DigitalKey" "FacAtFunction" "FactoryTestProvider" "FotaAgent"  "KnoxGuard" "Rampart"
     "ModemServiceMode" "PaymentFramework" "SEMFactoryApp" "SOAgent7" "SamsungCarKeyFw" 
     "SamsungPass" "SamsungPassAutofill_v1" "SilentLog" "SmartEpdgTestApp" "Ts43AuthService" 
-    "UnifiedTetheringProvision" "UnifiedVVM" "UsByod" "WebManual" "WlanTest" "wssyncmldm" "MyGalaxyService" 
+    "UnifiedTetheringProvision" "UnifiedVVM" "UsByod" "WebManual" "WlanTest" "wssyncmldm" "MyGalaxyService"
     
     # Factory/Test
     "AutomationTest_FB" "DRParser" "FactoryCameraFB" 
 	
+
+    
     # Facebook
     "FBAppManager_NS" "FBInstaller_NS" "FBServices" 
     

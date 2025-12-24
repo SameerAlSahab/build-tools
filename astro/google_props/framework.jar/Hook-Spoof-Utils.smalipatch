@@ -1,9 +1,9 @@
-  
+
 FILE smali/android/app/ApplicationPackageManager.smali
 REPLACE .method public whitelist hasSystemFeature(Ljava/lang/String;I)Z
     .locals 3
     # 
-    invoke-static {p1}, Lcom/android/internal/util/PixelSpoof;->shouldSpoof(Ljava/lang/String;)Z
+    invoke-static {p1}, Lcom/astrorom/utils/PixelSpoof;->shouldSpoof(Ljava/lang/String;)Z
 
     move-result v0
 
@@ -115,7 +115,7 @@ REPLACE .method public static whitelist newApplication(Ljava/lang/Class;Landroid
     
     # 
     
-    invoke-static {p1}, Lcom/android/internal/util/PixelSpoof;->setProps(Landroid/content/Context;)V
+    invoke-static {p1}, Lcom/astrorom/utils/PixelSpoof;->setProps(Landroid/content/Context;)V
 
     return-object p0
 
@@ -145,9 +145,9 @@ REPLACE .method public whitelist newApplication(Ljava/lang/ClassLoader;Ljava/lan
 
     invoke-virtual {p0, p3}, Landroid/app/Application;->attach(Landroid/content/Context;)V
 
-	#
+	# 
 	
-    invoke-static {p3}, Lcom/android/internal/util/PixelSpoof;->setProps(Landroid/content/Context;)V
+    invoke-static {p3}, Lcom/astrorom/utils/PixelSpoof;->setProps(Landroid/content/Context;)V
 
     return-object p0
 

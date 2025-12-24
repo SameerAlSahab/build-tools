@@ -1,7 +1,5 @@
 
 #  Fix Bluetooth device forget issue (Special thanks to @duhansysl)
-#  Source: https://github.com/3arthur6/BluetoothLibraryEDIT
-
 
 
 BT_LIB_PATCH() {
@@ -18,7 +16,7 @@ fi
 SDK_VERSION="$(GET_PROP "system" "ro.build.version.sdk")"
 
 
-# Android version specific patches
+
 case "$SDK_VERSION" in
     33)
         HEX_EDIT "system/system/lib64/libbluetooth_jni.so" \

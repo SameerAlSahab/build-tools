@@ -1,13 +1,12 @@
-
 # Settings
 TARGET_RES_IMG="3200"
 TARGET_FPS="60"
 VIDEO_RES=1080
 SCALE_FACTOR="0.5"
-
+ADD_CUSTOM_WALL=false
 
 RES_DIR="$WORK_DIR/res"
-DRAWABLE_DIR="$RES_DIR/drawable-nodpi"
+DRAWABLE_DIR="$RES_DIR/drawable-nodpi-v4"
 RAW_DIR="$RES_DIR/raw"
 VALUES_DIR="$RES_DIR/values"
 JSON_MAIN="$RAW_DIR/resources_info.json"
@@ -31,7 +30,7 @@ for cmd in jq ffmpeg cwebp bc ffprobe; do
     if ! command -v $cmd &> /dev/null; then echo "Error: $cmd missing."; exit 1; fi
 done
 
-LOG_BEGIN " Processing Stock wallpapers..."
+echo "Scaling stock wallpapers..."
 
 shopt -s globstar nullglob
 for img in "$RES_DIR"/**/*.webp; do
@@ -41,9 +40,9 @@ for vid in "$RAW_DIR/video_"*.mp4; do
     ffmpeg -y -i "$vid" -vf "fps=$TARGET_FPS,scale=$VIDEO_RES:-2,setsar=1:1" $FFMPEG_FIX_ARGS -c:a copy "$vid.tmp.mp4" >/dev/null 2>&1 && mv -f "$vid.tmp.mp4" "$vid"
 done
 
-if [ -d "$CUSTOM_DIR" ]; then
- 
-
+if [ "$ADD_CUSTOM_WALL" = true ] && [ -d "$CUSTOM_DIR" ]; then
+    LOG_BEGIN "Adding custom wallpapers if exist.."
+	
     NEXT_INDEX=$(jq '[.phone[].index] | max + 1' "$JSON_MAIN")
     
     shopt -s nullglob
@@ -51,7 +50,7 @@ if [ -d "$CUSTOM_DIR" ]; then
         extension="${file##*.}"
         filename=$(basename "$file")
         
-       
+   
         if [[ "$extension" =~ ^(jpg|png|webp)$ ]]; then
             TYPE="image"
             LAST_FILE_NUM=$(find "$DRAWABLE_DIR" -name "wallpaper_*.webp" | grep -oE '[0-9]+' | sort -rn | head -1)
@@ -70,7 +69,7 @@ if [ -d "$CUSTOM_DIR" ]; then
             continue
         fi
 
-        # Generate Astro ID
+  
         LAST_ASTRO_NUM=$(grep -oE 'astro_custom_[0-9]+' "$JSON_MAIN" | grep -oE '[0-9]+' | sort -rn | head -1)
         [ -z "$LAST_ASTRO_NUM" ] && LAST_ASTRO_NUM=0
         ASTRO_ID_NUM=$((LAST_ASTRO_NUM + 1))
@@ -78,7 +77,7 @@ if [ -d "$CUSTOM_DIR" ]; then
 
         LAST_DRAW_ID=$(grep 'type="drawable"' "$PUBLIC_XML" | tail -n 1 | grep -oE 'id="0x[0-9a-f]+"' | cut -d'"' -f2)
         NEXT_DRAW_ID=$(increment_hex "$LAST_DRAW_ID")
-   
+        # Get last string ID
         LAST_STR_ID=$(grep 'type="string"' "$PUBLIC_XML" | tail -n 1 | grep -oE 'id="0x[0-9a-f]+"' | cut -d'"' -f2)
         NEXT_STR_ID=$(increment_hex "$LAST_STR_ID")
 
@@ -86,10 +85,8 @@ if [ -d "$CUSTOM_DIR" ]; then
         sed -i "/<\/resources>/i \    <public type=\"drawable\" name=\"${NEW_NAME}\" id=\"${NEXT_DRAW_ID}\" />" "$PUBLIC_XML"
         sed -i "/<\/resources>/i \    <public type=\"string\" name=\"${ASTRO_ID}\" id=\"${NEXT_STR_ID}\" />" "$PUBLIC_XML"
 
-       
         sed -i "/<\/resources>/i \    <string name=\"${ASTRO_ID}\">Astro Custom ${ASTRO_ID_NUM}</string>" "$STRINGS_XML"
 
-        
         tmp_json=$(mktemp)
         if [ "$TYPE" == "image" ]; then
             jq --argjson idx "$NEXT_INDEX" --arg fn "$FINAL_FILENAME" --arg sid "$ASTRO_ID" \
@@ -105,10 +102,10 @@ if [ -d "$CUSTOM_DIR" ]; then
 
         NEXT_INDEX=$((NEXT_INDEX + 1))
     done
+    
+    LOG_END "Wallpaper Patch applied."
+elif [ "$ADD_CUSTOM_WALL" = false ]; then
+    echo "Custom wallpaper addition is disabled."
+else
+    echo "Custom wallpaper directory not found: $CUSTOM_DIR"
 fi
-
-LOG_END "Done Wallpaper patch."
-
-
-
-
