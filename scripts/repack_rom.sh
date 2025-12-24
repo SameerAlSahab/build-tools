@@ -200,11 +200,13 @@ BUILD_SUPER_IMAGE() {
 # and finally signs the ZIP with test keys.
 #
 CREATE_FLASHABLE_ZIP() {
-    local super_img="${DIROUT}/super.img"
     local build_date=$(date +%Y%m%d)
+    local name_prefix="AstroROM_${STOCK_MODEL}_v${ROM_VERSION}_${build_date}"
+    local super_img="${DIROUT}/super.img"
     local build_dir="${DIROUT}/zip_build"
-    local zip_path="$DIROUT/tmp{/STOCK_MODEL}_v${ROM_VERSION}_${build_date}.zip"
-    local signed_zip_path="${DIROUT}/AstroROM_${STOCK_MODEL}_v${ROM_VERSION}_${build_date}_signed.zip"
+    local zip_path="$DIROUT/tmp/$name_prefix.zip"
+    local signed_zip_path="${DIROUT}/${name_prefix}_signed.zip"
+
 
     [[ -f "$super_img" ]] || ERROR_EXIT "super.img missing."
     COMMAND_EXISTS "7z" || ERROR_EXIT "7z tool not found."
@@ -267,7 +269,7 @@ REPACK_ROM() {
 
     # Check if we should create a full zip or just the unpacked images for debugging. For instance , fastboot or recovery flash.
     if GET_FEAT_STATUS DEBUG_BUILD; then
-        LOG_INFO "Debug build enabled. Repacked images are available at $DIROUT"
+        LOG_INFO "ROM debug build enabled. Repacked images are available at $DIROUT"
     else
         # For a release build, create the final flashable ZIP
         BUILD_SUPER_IMAGE
