@@ -236,7 +236,7 @@ CREATE_FLASHABLE_ZIP() {
     LOG_INFO "Signing ZIP"
     # Sign the ZIP with AOSP test keys 
     # https://android.googlesource.com/platform/prebuilts/sdk/+/master/tools/lib/signapk.jar?autodive=0%2F
-    java -jar "$BIN/signapk/signapk.jar" -w \
+    java -jar "$BIN/signapk/signapk.jar" \
         "$BIN/signapk/keys/aosp_testkey.x509.pem" \
         "$BIN/signapk/keys/aosp_testkey.pk8" \
         "$zip_path" \
