@@ -1,3 +1,5 @@
+#Thanks to samsung community on telegram for sharing this
+
 if [[ "$EXTRA_MODEL" == SM-S938* ]]; then
 # Now Brief
 FF "FRAMEWORK_SUPPORT_PERSONALIZED_DATA_CORE" "TRUE"
@@ -110,10 +112,10 @@ FF "COMMON_SUPPORT_ULTRA_POWER_SAVING" "TRUE"
 ADD_FROM_FW "extra" "system" "etc/mediacontextanalyzer"
 FF "MMFW_SUPPORT_MEDIA_CONTEXT_ANALYZER" "TRUE"
 ADD_FROM_FW "extra" "system" "lib64/libcontextanalyzer_jni.media.samsung.so"
-ADD_FROM_FW "extra" "system" "lib64/video-highlight-arm64-v8a.so"
+ADD_FROM_FW "extra" "system" "lib64/libvideo-highlight-arm64-v8a.so"
 ADD_FROM_FW "extra" "system" "lib64/libmediacontextanalyzer.so"
 
-local feature_xml="$WORKSPACE/system/system/etc/floating-feature.xml"
+local feature_xml="$WORKSPACE/system/system/etc/floating_feature.xml"
 
 # TODO : a way for check device has NPU or not. Usually flagship device have NPU related props in the xml.
 # We use this method until a new way found. For example : dm3q
@@ -132,11 +134,25 @@ ADD_FROM_FW "extra" "system" "priv-app/SemanticSearchCore/SemanticSearchCore.apk
 
 # PhotoHDR (Will not work without 64bit only surfaceflinger)
 # FF "MMFW_SUPPORT_PHOTOHDR" "TRUE"
-# and other HDR* lines 
+# and other HDR* related lines
 
-# Settings
-ADD_FROM_FW "extra" "system" "priv-app/SecSettings" 
-ADD_FROM_FW "extra" "system" "priv-app/SettingsProvider" 
-ADD_FROM_FW "extra" "system" "priv-app/SecSettingsIntelligence.apk" 
+# S23 Ultra have same HFR modes and features S25U have
+if [ "$CODENAME" = "dm3q" ]; then
+    ADD_FROM_FW "extra" "system" "priv-app/SecSettings"
+    ADD_FROM_FW "extra" "system" "priv-app/SettingsProvider"
+fi
+    ADD_FROM_FW "extra" "system" "priv-app/SecSettingsIntelligence.apk"
+
+# Set props
+BPROP "system" "ro.product.system.model" "SM-S938B"
+BPROP "product" "ro.product.product.model" "SM-S938B"
+# This fixes some apps that need exact device props to function like Expert raw
+# https://github.com/salvogiangri/UN1CA/commit/e18fb23cf459ae160187b614b6bde0938717b6ef
+BPROP "product" "ro.product.product.name" "$CODENAME"
 
 fi
+
+# Basic features
+FF "SUPPORT_SCREEN_RECORDER" "TRUE"
+FF "VOICERECORDER_CONFIG_DEF_MODE" "normal,interview,voicememo"
+FF "SUPPORT_LOW_HEAT_MODE" "TRUE"
