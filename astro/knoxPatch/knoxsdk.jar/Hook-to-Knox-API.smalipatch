@@ -3,9 +3,12 @@
 FILE smali/com/samsung/android/knox/EnterpriseDeviceManager.smali
 REPLACE  .method public static greylist getAPILevel()I
     .locals 1
- 
-     const/16 v0, 0x13
 
-     return v0
+    invoke-static {}, Lio/mesalabs/unica/KnoxPatchHooks;->onEDMGetAPILevel()I
+
+    move-result v0
+
+    return v0
 
 END
+

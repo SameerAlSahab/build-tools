@@ -1,3 +1,5 @@
+# https://github.com/salvogiangri/UN1CA/tree/sixteen/unica/mods/knoxpatch
+
 BPROP "system" "security.mdf.result" ""
 BPROP "system" "security.mdf" ""
 BPROP "system" "ro.security.mdf.ver" ""
@@ -14,3 +16,9 @@ BPROP "system" "ro.security.fips_bssl.ver" ""
 BPROP "system" "ro.config.iccc_version" ""
 
 BPROP "system" "ro.oem_unlock_supported" "0"
+
+REMOVE "system" "etc/public.libraries-wsm.samsung.txt"
+REMOVE "system" "lib/libhal.wsm.samsung.so"
+REMOVE "system" "lib/vendor.samsung.hardware.security.wsm.service-V1-ndk.so"
+REMOVE "system" "lib64/libhal.wsm.samsung.so"
+REMOVE "system" "lib64/vendor.samsung.hardware.security.wsm.service-V1-ndk.so"
