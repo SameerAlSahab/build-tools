@@ -220,12 +220,14 @@ CREATE_FLASHABLE_ZIP() {
     # Customize the updater-script with build-specific variables
     local updater="$build_dir/META-INF/com/google/android/updater-script"
     if [[ -f "$updater" ]]; then
-        sed -i \
-            -e "s/__ROM_VERSION__/${ROM_VERSION}/g" \
-            -e "s/__MODEL_NAME__/${MODEL_NAME}/g" \
-            -e "s/__BUILD_DATE__/${build_date}/g" \
-            -e "s/__CODENAME__/${CODENAME}/g" \
-            "$updater"
+
+    sed -i \
+        -e "s|__ROM_VERSION__|${ROM_VERSION}|g" \
+        -e "s|__MODEL_NAME__|${MODEL_NAME}|g" \
+        -e "s|__BUILD_DATE__|${build_date}|g" \
+        -e "s|__CODENAME__|${CODENAME}|g" \
+        "$updater"
+
     fi
 
     RUN_CMD "Building ROM zip" \

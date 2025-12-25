@@ -1,13 +1,3 @@
-#
-#
-# by Ian Macdonald, enhanced by afaneh92
-#
-#  Disables:
-#  - File-Based Encryption (FBE)
-#  - Full-Disk Encryption (FDE)
-#  - Factory Reset Protection (FRP)
-#  - Stock Recovery
-#
 
 LOG_BEGIN "Removing Samsung Encryption"
 

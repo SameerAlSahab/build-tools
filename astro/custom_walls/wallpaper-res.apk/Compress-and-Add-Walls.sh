@@ -1,5 +1,3 @@
-# https://github.com/salvogiangri/UN1CA/blob/sixteen/unica/mods/wallpaper/customize.sh
-
 
 # Settings
 TARGET_RES_IMG="3200"

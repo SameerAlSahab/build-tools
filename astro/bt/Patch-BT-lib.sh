@@ -1,7 +1,4 @@
 
-#  Fix Bluetooth device forget issue (Special thanks to @duhansysl)
-
-
 BT_LIB_PATCH() {
 APEX_FILE=$(find "$WORKSPACE/system/system/apex" -name "com.android.bt*.apex" | head -1)
 if [[ -n "$APEX_FILE" ]]; then
@@ -51,9 +48,7 @@ if ! EXISTS "system" "lib64/libbluetooth_jni.so"; then
 LOG_BEGIN "Applying bluetooth patches for forget issue"
 
 if ! BT_LIB_PATCH; then
-
-     ERROR_EXIT "Cannot apply bluetooth patches."
-
+  ERROR_EXIT "Cannot apply bluetooth patches."
 fi
 
 LOG_END "Bluetooth device forget patch applied successfully"

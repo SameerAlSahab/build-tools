@@ -1,5 +1,3 @@
-# https://github.com/ShaDisNX255/NcX_Stock/commit/d97ec1672fe9e1b3f8c241ec96b3c0a9e096bfea
-
 FILE smali/com/samsung/android/knox/EnterpriseDeviceManager.smali
 REPLACE  .method public static greylist getAPILevel()I
     .locals 1

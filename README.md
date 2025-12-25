@@ -27,9 +27,10 @@ To create a universal, hassle-free ROM modification solution that will auto patc
 - Official status in device information
 - Heavily debloated
 - Bluetooth library patched
+- Unlock higher FPS on games
 - Smart Manager CN 
 - Samsung encryption removed
-- Fixed Knox apps (Secure Folder, Samsung Health, Private Share, and more)
+- Fixed Knox apps ([KnoxPatch](https://github.com/salvogiangri/KnoxPatch))
 - Disabled secure screenshot detection
 - Fixed SmartView
 
@@ -60,7 +61,7 @@ To create a universal, hassle-free ROM modification solution that will auto patc
 
 This project wouldn't be possible without the incredible work of:
 
-- **[Salvo Giangreco](https://github.com/salvogiangri)** - The mind behind the **[UN1CA](https://github.com/salvogiangri/UN1CA)** project and a true leader in the Samsung community. The initial ideas and inspiration that made AstroROM possible.His UN1CA 
+- **[Salvo Giangreco](https://github.com/salvogiangri)** - The mind behind the **[UN1CA](https://github.com/salvogiangri/UN1CA)** project and a true leader in the Samsung community. The initial ideas and inspiration that made AstroROM possible. 
 - **[BlassGO](https://github.com/BlassGO)** - For the Dynamic Installer.
 - **[Danda420](https://github.com/Danda420)** - For his genfscontexts.
 - **[jesec](https://github.com/jesec)** - For samfirm.js , which we use to download the latest firmwares.
@@ -92,8 +93,6 @@ This is an independent project and is not affiliated with or endorsed by Samsung
 ---
 
 <div align="center">
-
-**Made with ❤️ for the Samsung community**
 
 *If this project helped you, consider giving it a ⭐*
 

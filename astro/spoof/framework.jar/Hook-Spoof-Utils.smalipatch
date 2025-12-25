@@ -1,7 +1,3 @@
-# PixelSpoof is Based on Salvo's https://github.com/salvogiangri/UN1CA/blob/sixteen/unica/mods/settings/smali/system/framework/framework.jar/0002-Introduce-SamsungPropsHooks.patch'
-# 
-# Gameprops taken from https://github.com/salvogiangri/UN1CA/blob/sixteen/unica/mods/gamesprops/customize.sh
-#
 
 FILE smali/android/app/ApplicationPackageManager.smali
 REPLACE .method public whitelist hasSystemFeature(Ljava/lang/String;I)Z

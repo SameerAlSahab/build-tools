@@ -1,9 +1,9 @@
 #
 # https://github.com/salvogiangri/UN1CA/blob/sixteen/unica/mods/knoxpatch/customize.sh
 #
-
-
 # Bypasses Knox attestation checks for rooted devices
+#
+
 
 FILE smali/com/samsung/android/kmxservice/common/util/RootOfTrust.smali
 

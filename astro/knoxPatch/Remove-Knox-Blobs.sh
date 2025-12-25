@@ -1,5 +1,3 @@
-# https://github.com/salvogiangri/UN1CA/tree/sixteen/unica/mods/knoxpatch
-
 BPROP "system" "security.mdf.result" ""
 BPROP "system" "security.mdf" ""
 BPROP "system" "ro.security.mdf.ver" ""
