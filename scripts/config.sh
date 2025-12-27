@@ -106,7 +106,6 @@ dependencies_config=(
     "p7zip-full|p7zip|7-Zip (For extraction)|true"
     "bc|bc|BC calculator (Size calculations)|true"
     "zip|zip|Zip utility (For zipping)|true"
-    "nodejs|nodejs|Node.js (For JS-based utilities)|true"
     "e2fsprogs|e2fsprogs|EXT4 filesystem tools|true"
     "attr|attr|xattr (SELinux configs)|true"
     "zipalign|android-sdk-build-tools|Zipalign (APKs alignment)|true"
