@@ -19,10 +19,10 @@
 INIT_BUILD_ENV() {
 
     CHECK_PRIVILEGES
-	
-	MAIN_WORKDIR="${WORKDIR}/${MODEL}"
-	STOCK_WORKDIR="${WORKDIR}/${STOCK_MODEL:-$MODEL}"
-	EXTRA_WORKDIR="${WORKDIR}/${EXTRA_MODEL}"
+    
+    MAIN_WORKDIR="${WORKDIR}/${MODEL}"
+    STOCK_WORKDIR="${WORKDIR}/${STOCK_MODEL:-$MODEL}"
+    EXTRA_WORKDIR="${WORKDIR}/${EXTRA_MODEL}"
 
     EXTRACT_ROM || ERROR_EXIT "Firmware extraction failed."
 
@@ -83,6 +83,106 @@ EOF
 
     WORKSPACE="$build_dir"
     CONFIG_DIR="$config_dir"
+
+    LOG_INFO "Checking VNDK version..."
+
+    [[ -z "$VNDK" ]] && { ERROR_EXIT "VNDK version not defined."; return 1; }
+    local sys_ext_dir
+    sys_ext_dir=$(GET_PARTITION_PATH "system_ext") || return 1
+
+ 
+    local manifest="${sys_ext_dir}/etc/vintf/manifest.xml"
+    local current_vndk=""
+
+    if [[ -f "$manifest" ]]; then
+        current_vndk=$(grep -A2 -i "vendor-ndk" "$manifest" | grep -oP '<version>\K[0-9]+' | head -1)
+        [[ "$current_vndk" == "$VNDK" ]] && { LOG_END "VNDK matches ($VNDK)."; return 0; }
+    fi
+
+    LOG_WARN "VNDK mismatch (Current: ${current_vndk:-None} and Target: $VNDK). Patching..."
+
+    local apex_name="com.android.vndk.v${VNDK}.apex"
+    local source_apex="${PROJECT_DIR}/vndk/v${VNDK}/${apex_name}"
+    local dest_rel_path="apex/${apex_name}"
+
+
+    find "${sys_ext_dir}/apex" -name "com.android.vndk.v*.apex" -delete 2>/dev/null
+
+
+    if ! ADD "system_ext" "$source_apex" "$dest_rel_path" "VNDK v${VNDK} APEX"; then
+        ERROR_EXIT "Failed to install VNDK APEX."
+        return 1
+    fi
+
+    # Update Manifest
+    if [[ -f "$manifest" ]]; then
+        if grep -q "<vendor-ndk>" "$manifest"; then
+            sed -i "s|<version>[0-9]\+</version>|<version>${VNDK}</version>|g" "$manifest"
+        else
+            sed -i "s|</manifest>|    <vendor-ndk>\\n        <version>${VNDK}</version>\\n    </vendor-ndk>\\n</manifest>|" "$manifest"
+        fi
+        LOG_INFO "Manifest updated."
+    fi
+
+    LOG_END "VNDK patching completed."
+
+    local stock_path ws_path
+    local stock_layout="merged" ws_layout="merged"
+
+   
+    if stock_path=$(GET_PARTITION_PATH "system_ext" "stock" 2>/dev/null); then
+        [[ "$stock_path" == *"/system_ext" ]] && [[ "$stock_path" != *"/system/system/system_ext" ]] && stock_layout="separate"
+    fi
+
+    
+    if ws_path=$(GET_PARTITION_PATH "system_ext" 2>/dev/null); then
+        [[ "$ws_path" == *"/system_ext" ]] && [[ "$ws_path" != *"/system/system/system_ext" ]] && ws_layout="separate"
+    else
+        return 0
+    fi
+
+    [[ "$ws_layout" == "$stock_layout" ]] && return 0
+
+   
+    local sys_config="${CONFIG_DIR}/system_fs_config"
+    local sys_contexts="${CONFIG_DIR}/system_file_contexts"
+    
+    if [[ "$stock_layout" == "merged" ]]; then
+      
+        LOG_INFO "Merging system_ext into system..."
+        local dest_dir="$WORKSPACE/system/system/system_ext"
+        
+        mkdir -p "$dest_dir"
+        SUDO rsync -a --delete "${ws_path}/" "${dest_dir}/" || return 1
+        SUDO rm -rf "$ws_path"
+        
+        
+        SUDO ln -sf "/system/system_ext" "$WORKSPACE/system/system_ext"
+        echo "system/system_ext 0 0 755 capabilities=0x0" >> "$sys_config"
+        echo "/system_ext u:object_r:system_file:s0" >> "$sys_contexts"
+
+    else
+        
+        LOG_INFO "Separating system_ext from system..."
+        local dest_dir="$WORKSPACE/system_ext"
+        
+        mkdir -p "$dest_dir"
+        SUDO rsync -a --delete "${ws_path}/" "${dest_dir}/" || return 1
+        SUDO rm -rf "$ws_path"
+        [[ -L "$WORKSPACE/system/system_ext" ]] && SUDO rm -f "$WORKSPACE/system/system_ext"
+
+     
+        echo "system_ext" > "${CONFIG_DIR}/system_ext_fs_config"
+        sed -i '/^system\/system_ext/d' "$sys_config"
+        sed -i '/^\/system\/system_ext/d' "$sys_contexts"
+    fi
+
+  
+    local target="$WORKSPACE/${stock_layout:0:6}_ext" 
+    [[ "$stock_layout" == "merged" ]] && target="$WORKSPACE/system/system/system_ext"
+    [[ "$stock_layout" == "separate" ]] && target="$WORKSPACE/system_ext"
+
+
     LOG_END "Build environment ready at $build_dir"
 }
 
@@ -233,5 +333,4 @@ VALIDATE_WORKDIR() {
 
     return 0
 }
-
 

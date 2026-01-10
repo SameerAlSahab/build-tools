@@ -29,16 +29,16 @@ REPACK_PARTITION() {
 
     local UNPACK_CONF="$model_fs_dir/unpack.conf"
     local HEADROOM_PERCENT=7
-	
+    
     local foldersize_kb=$(du -s -k "$model_fs_dir/$partition_name" | awk '{print $1}')
-	target_size_kb=$((foldersize_kb + foldersize_kb * HEADROOM_PERCENT / 100))
+    target_size_kb=$((foldersize_kb + foldersize_kb * HEADROOM_PERCENT / 100))
 
     if (( foldersize_kb < 15043 )); then
         target_size_kb=$((foldersize_kb + foldersize_kb * 35 / 100))
     else
         target_size_kb=$((foldersize_kb + foldersize_kb * HEADROOM_PERCENT / 100))
     fi
-	
+    
     # System-as-root partitions use "/" as their mount point
     local mount_point="/$partition_name"
     [[ "$partition_name" =~ ^system(_[ab])?$ ]] && mount_point="/"
@@ -63,13 +63,13 @@ REPACK_PARTITION() {
     }
 
     # Remove duplicates and ensure known capabilities exist for consistency  
-	for f in "$fs_config" "$file_contexts"; do
-		awk '!seen[$0]++' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
-		sed -i 's/\r//g; s/[^[:print:]]//g; /^$/d' "$f"
-	done
-	
-	sed -i '/^[a-zA-Z0-9\/]/ { /capabilities=/! s/$/ capabilities=0x0/ }' "$fs_config"
-	sed -i 's/  */ /g' "$fs_config"
+    for f in "$fs_config" "$file_contexts"; do
+        awk '!seen[$0]++' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+        sed -i 's/\r//g; s/[^[:print:]]//g; /^$/d' "$f"
+    done
+    
+    sed -i '/^[a-zA-Z0-9\/]/ { /capabilities=/! s/$/ capabilities=0x0/ }' "$fs_config"
+    sed -i 's/  */ /g' "$fs_config"
 
 
     # https://source.android.com/docs/core/architecture/android-kernel-file-system-support
@@ -100,7 +100,7 @@ REPACK_PARTITION() {
 
             RUN_CMD "Building ${partition_name} (ext4)" "$build_cmd" || return 1
        
-			;;
+            ;;
 
         erofs)
             # https://source.android.com/docs/core/architecture/kernel/erofs
@@ -115,7 +115,7 @@ REPACK_PARTITION() {
             local base_size=$(du -sb "$model_fs_dir/$partition_name" | awk '{print $1}')
             local f2fs_overhead
             local final_margin_percent
-			# TODO: Try make it minimium , as of now 56MB overhead+7% headroom
+            # TODO: Try make it minimium , as of now 56MB overhead+7% headroom
                 f2fs_overhead=$((56 * 1024 * 1024))
                 final_margin_percent=107
 
@@ -229,19 +229,9 @@ CREATE_FLASHABLE_ZIP() {
 
     rm -rf "$build_dir"
 
-#    LOG_INFO "Signing ZIP"
-    # Sign the ZIP with AOSP test keys 
-    # https://android.googlesource.com/platform/prebuilts/sdk/+/master/tools/lib/signapk.jar?autodive=0%2F
-#    java -jar "$BIN/signapk/signapk.jar" -w \
-#        "$BIN/signapk/keys/aosp_testkey.x509.pem" \
-#        "$BIN/signapk/keys/aosp_testkey.pk8" \
-#        "$zip_path" \
-#        "$signed_zip_path" || ERROR_EXIT "ZIP signing failed"
 
-#    rm -f "$zip_path"
-
-    LOG_END "Flashable zip created at $(basename "$signed_zip_path")"
-	
+    LOG_END "Flashable zip created at $(basename "$zip_path")"
+    
 }
 
 
