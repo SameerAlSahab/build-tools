@@ -17,9 +17,6 @@
 
 
 
-#
-# Repacks a single partition (e.g., system, vendor) into a filesystem image (.img).
-#
 REPACK_PARTITION() {
     local partition_name="$1"
     local target_fs="$2"
@@ -195,16 +192,13 @@ BUILD_SUPER_IMAGE() {
 #
 # Creates a flashable ZIP package from the super.img and an installer.
 #
-# This function takes the generated super.img, places it in a directory with the
-# dynamic installer scripts, customizes the updater-script, zips the content,
-# and finally signs the ZIP with test keys.
-#
+
 CREATE_FLASHABLE_ZIP() {
     local build_date=$(date +%Y%m%d)
     local name_prefix="AstroROM_${STOCK_MODEL}_v${ROM_VERSION}_${build_date}"
     local super_img="${DIROUT}/super.img"
     local build_dir="${DIROUT}/zip_build"
-    local zip_path="$DIROUT/tmp/$name_prefix.zip"
+    local zip_path="$DIROUT/$name_prefix.zip"
     local signed_zip_path="${DIROUT}/${name_prefix}_signed.zip"
 
 
@@ -231,20 +225,20 @@ CREATE_FLASHABLE_ZIP() {
     fi
 
     RUN_CMD "Building ROM zip" \
-        "cd '$build_dir' && 7z a -tzip -mx=5 '$zip_path' ."
+        "cd '$build_dir' && 7z a -tzip -mx=3 '$zip_path' ."
 
     rm -rf "$build_dir"
 
-    LOG_INFO "Signing ZIP"
+#    LOG_INFO "Signing ZIP"
     # Sign the ZIP with AOSP test keys 
     # https://android.googlesource.com/platform/prebuilts/sdk/+/master/tools/lib/signapk.jar?autodive=0%2F
-    java -jar "$BIN/signapk/signapk.jar" \
-        "$BIN/signapk/keys/aosp_testkey.x509.pem" \
-        "$BIN/signapk/keys/aosp_testkey.pk8" \
-        "$zip_path" \
-        "$signed_zip_path" || ERROR_EXIT "ZIP signing failed"
+#    java -jar "$BIN/signapk/signapk.jar" -w \
+#        "$BIN/signapk/keys/aosp_testkey.x509.pem" \
+#        "$BIN/signapk/keys/aosp_testkey.pk8" \
+#        "$zip_path" \
+#        "$signed_zip_path" || ERROR_EXIT "ZIP signing failed"
 
-    rm -f "$zip_path"
+#    rm -f "$zip_path"
 
     LOG_END "Flashable zip created at $(basename "$signed_zip_path")"
 	

@@ -18,6 +18,8 @@
 
 INIT_BUILD_ENV() {
 
+    CHECK_PRIVILEGES
+	
 	MAIN_WORKDIR="${WORKDIR}/${MODEL}"
 	STOCK_WORKDIR="${WORKDIR}/${STOCK_MODEL:-$MODEL}"
 	EXTRA_WORKDIR="${WORKDIR}/${EXTRA_MODEL}"
@@ -99,15 +101,15 @@ LINK_PARTITIONS() {
         [[ ! -d "$src_path" ]] && continue
 
 
-        cp -al "$src_path" "$build_dir/" || ERROR_EXIT "Cannot process $part in workspace."
+        SUDO cp -al "$src_path" "$build_dir/" || ERROR_EXIT "Cannot process $part in workspace."
 
 
-        find "$target_path" -type f \( \
+        SUDO find "$target_path" -type f \( \
             -name "*.prop" -o -name "*.xml" -o -name "*.conf" -o \
             -name "*.sh" -o -name "*.json" -o -name "*.rc" -o -size -1M \
         \) -exec sh -c 'cp --preserve=mode,timestamps "$1" "$1.tmp" && mv "$1.tmp" "$1"' _ {} \; 2>/dev/null
 
-        chmod -R u+w "$target_path" 2>/dev/null
+        SUDO chmod -R u+w "$target_path" 2>/dev/null
 
 
         for cfg_type in "fs_config" "file_contexts"; do
@@ -192,11 +194,20 @@ FIND_SYSTEM_EXT() {
 
 GET_FW_DIR() {
     local source_firmware="$1"
+    
     case "$source_firmware" in
         "main")  echo "$MAIN_WORKDIR" ;;
         "extra") echo "$EXTRA_WORKDIR" ;;
         "stock") echo "$STOCK_WORKDIR" ;;
-        *)       return 1 ;;
+        *)
+        
+            local blob_source="$BLOBS_DIR/$source_firmware"
+            if [[ -d "$blob_source" ]]; then
+                echo "$blob_source"
+            else
+                return 1
+            fi
+            ;;
     esac
     return 0
 }
@@ -211,7 +222,7 @@ VALIDATE_WORKDIR() {
     }
 
     if [[ ! -d "$workdir" ]]; then
-        LOG_WARN "Work directory not exist for '$source_firmware': $workdir"
+        LOG_WARN "Work directory does not exist for '$source_firmware': $workdir"
         return 1
     fi
 

@@ -27,11 +27,12 @@ ROM_VERSION="2.0.5"
 export ROM_VERSION
 export DEBUG_BUILD=false
 
-BIN=$ASTROROM/utilities
+BIN=$ASTROROM/prebuilts
 export BIN
 
 PROJECT_DIR="$ASTROROM/astro"
 OBJECTIVES_DIR="$ASTROROM/objectives"
+BLOBS_DIR="$ASTROROM/blobs"
 
 available_devices=()
 
@@ -93,70 +94,101 @@ EXEC_SCRIPT() {
 
 _BUILD_WORKFLOW() {
 
-if [[ -z "$device" ]]; then
-    [[ ! -d "$OBJECTIVES_DIR" ]] && \
-        ERROR_EXIT "OBJECTIVES_DIR not found: $OBJECTIVES_DIR"
+    CHECK_ALL_DEPENDENCIES
+    chmod +x -R "$BIN"
 
-    local devices=()
-    for d in "$OBJECTIVES_DIR"/*/; do
-        [[ -d "$d" ]] || continue
-        devices+=("$(basename "$d")")
-    done
+    if [[ -z "$device" ]]; then
+        [[ ! -d "$OBJECTIVES_DIR" ]] && \
+            ERROR_EXIT "OBJECTIVES_DIR not found: $OBJECTIVES_DIR"
 
-    [[ ${#devices[@]} -eq 0 ]] && \
-        ERROR_EXIT "No objectives found in $OBJECTIVES_DIR"
+        local devices=()
+        for d in "$OBJECTIVES_DIR"/*/; do
+            [[ -d "$d" ]] || continue
+            devices+=("$(basename "$d")")
+        done
 
-    local choice=$(_CHOICE "Available objectives" "${devices[@]}")
-    device="${devices[choice-1]}"
-fi
+        [[ ${#devices[@]} -eq 0 ]] && \
+            ERROR_EXIT "No objectives found in $OBJECTIVES_DIR"
+
+        local choice=$(_CHOICE "Available objectives" "${devices[@]}")
+        device="${devices[choice-1]}"
+    fi
 
     OBJECTIVE="$OBJECTIVES_DIR/$device"
     export OBJECTIVE
 
     source "$OBJECTIVE/$device.sh" || ERROR_EXIT "Device config load failed"
 
-    SETUP_DEVICE_ENV || ERROR_EXIT "Env setup failed"
+# Github Ubuntu runners have 72GB storage only. So skip extra firmwares
+if  IS_GITHUB_ACTIONS; then
+    unset EXTRA_MODEL
+	unset EXTRA_CSC
+	unset EXTRA_IMEI
+fi
 
-    
+    local meta_tag="LAST_OBJ"
+    local last_device=""
+    local script_count=0
+    local marker_exists=false
+
+    if [[ -f "$MARKER_FILE" ]]; then
+        marker_exists=true
+        last_device=$(awk "/^$meta_tag / {print \$2}" "$MARKER_FILE")
+        script_count=$(awk "!/^$meta_tag / {c++} END {print c+0}" "$MARKER_FILE")
+    fi
+
+
+    if ! $marker_exists || [[ "$last_device" != "$device" ]] || [[ "$script_count" -eq 0 ]]; then
+        LOG_INFO "Initializing device environment for $device"
+
+        SETUP_DEVICE_ENV || ERROR_EXIT "Env setup failed"
+
+        mkdir -p "$(dirname "$MARKER_FILE")"
+        sed -i "/^$meta_tag /d" "$MARKER_FILE" 2>/dev/null || true
+        echo "$meta_tag $device" >> "$MARKER_FILE"
+    fi
+
+
     local layers=(
         "$OBJECTIVE"
         "$PROJECT_DIR"
         "$PROJECT_DIR/platform/$PLATFORM"
     )
 
-for layer in "${layers[@]}"; do
-    [[ ! -d "$layer" ]] && continue
+    for layer in "${layers[@]}"; do
+        [[ ! -d "$layer" ]] && continue
 
-    
-    while IFS= read -r -d '' sh; do
-        [[ "$sh" == *"$device.sh" ]] && continue
-        EXEC_SCRIPT "$sh" "$MARKER_FILE"
-    done < <(find "$layer" -type f -name "*.sh" \
-        ! -path "*.apk/*" \
-        ! -path "*.jar/*" \
-        -print0 | sort -z)
+        # Execute scripts
+        while IFS= read -r -d '' sh; do
+            [[ "$sh" == *"$device.sh" ]] && continue
+            EXEC_SCRIPT "$sh" "$MARKER_FILE"
+        done < <(find "$layer" -type f -name "*.sh" \
+            ! -path "*.apk/*" \
+            ! -path "*.jar/*" \
+            -print0 | sort -z)
 
-    
-    while IFS= read -r -d '' img; do
-        part=$(basename "$img" .img)
-        if target=$(GET_PARTITION_PATH "$part" 2>/dev/null); then
-            mkdir -p "$target"
-            sudo rsync -a --no-links "$img/" "$target/" \
-                || ERROR_EXIT "Partition sync failed $part"
-        else
-            LOG_WARN "Unknown partition. Ignoring.. $part"
-        fi
-    done < <(find "$layer" -type d -name "*.img" -print0)
-done
+        # Sync partitions
+        while IFS= read -r -d '' img; do
+            part=$(basename "$img" .img)
+            if target=$(GET_PARTITION_PATH "$part" 2>/dev/null); then
+                mkdir -p "$target"
+                rsync -a --no-links "$img/" "$target/" \
+                    || ERROR_EXIT "Partition sync failed $part"
+            else
+                LOG_WARN "Unknown partition. Ignoring.. $part"
+            fi
+        done < <(find "$layer" -type d -name "*.img" -print0)
+    done
+
 
     _APKTOOL_PATCH || ERROR_EXIT "APK/JAR patching failed"
-
     REPACK_ROM "$FILESYSTEM" || ERROR_EXIT "Repack failed"
-    
-	rm -rf "$WORKSPACE"
-	
+
+    rm -rf "$WORKSPACE"
+
     LOG_END "Build completed for $device"
 }
+
 
 
 show_usage() {
@@ -166,7 +198,7 @@ AstroROM Build Tool v${ROM_VERSION}
 Copyright (c) 2025 Sameer Al Sahab
 
 USAGE:
-  sudo ./build.sh [options] [command] [device]
+  ./build.sh [options] [command] [device]
 
 COMMANDS:
   -b, --build [device]      Build ROM for a specific device.
@@ -265,13 +297,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 
-[[ $EUID -ne 0 ]] && ERROR_EXIT "Root required"
-
 _BUILD_WORKFLOW
 
-
-chown -R -h "$SUDO_USER:$SUDO_USER" \
-    "$WORKSPACE" "$WORKDIR" "$DIROUT" "$FW_DIR" 2>/dev/null || true
+#sudo chmod -R 777 "$DIROUT" 
 
 LOG_DIALOG "Completed everything" "Build finished for $device"
 

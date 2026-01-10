@@ -1,17 +1,17 @@
 #Thanks to samsung community on telegram for sharing this
 
-if [[ "$EXTRA_MODEL" == SM-S938* ]]; then
+
 # Now Brief
 FF "FRAMEWORK_SUPPORT_PERSONALIZED_DATA_CORE" "TRUE"
 FF "FRAMEWORK_SUPPORT_SMART_SUGGESTIONS_WIDGET" "TRUE"
 FF "FRAMEWORK_SUPPORT_STACK_WIDGET_AUTO_ROTATION" "TRUE"
 
-ADD_FROM_FW "extra" "system" "priv-app/SamsungSmartSuggestions" 
-ADD_FROM_FW "extra" "system" "priv-app/Moments" 
-ADD_FROM_FW "extra" "system" "etc/sysconfig/moments.xml"
+ADD_FROM_FW "pa3q" "system" "priv-app/SamsungSmartSuggestions" 
+ADD_FROM_FW "pa3q" "system" "priv-app/Moments" 
+ADD_FROM_FW "pa3q" "system" "etc/sysconfig/moments.xml"
 
 # Environment adaptive display (Sead) + Display related
-ADD_FROM_FW "extra" "system" "priv-app/EnvironmentAdaptiveDisplay" 
+ADD_FROM_FW "pa3q" "system" "priv-app/EnvironmentAdaptiveDisplay" 
 FF "SUPPORT_COLOR_LENS" "TRUE" 
 # rest of patches are in services.jar 
 
@@ -22,44 +22,44 @@ FF "COMMON_CONFIG_AWESOME_INTELLIGENCE" "202501"
 
 # Audio Eraser
 FF "AUDIO_CONFIG_MULTISOURCE_SEPARATOR" "{FastScanning_6, SourceSeparator_4, Version_1.3.0}"
-ADD_FROM_FW "extra" "system" "etc/audio_ae_intervals.conf"
-ADD_FROM_FW "extra" "system" "etc/audio_effects.xml"
-ADD_FROM_FW "extra" "system" "etc/audio_effects_common.conf"
-ADD_FROM_FW "extra" "system" "lib64/libmultisourceseparator.so"
-ADD_FROM_FW "extra" "system" "lib64/libmultisourceseparator.audio.samsung.so"
-ADD_FROM_FW "extra" "system" "etc/public.libraries-audio.samsung.txt"
-ADD_FROM_FW "extra" "system" "etc/public.libraries-secinput.samsung.txt"
+ADD_FROM_FW "pa3q" "system" "etc/audio_ae_intervals.conf"
+ADD_FROM_FW "pa3q" "system" "etc/audio_effects.xml"
+ADD_FROM_FW "pa3q" "system" "etc/audio_effects_common.conf"
+ADD_FROM_FW "pa3q" "system" "lib64/libmultisourceseparator.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libmultisourceseparator.audio.samsung.so"
+ADD_FROM_FW "pa3q" "system" "etc/public.libraries-audio.samsung.txt"
+ADD_FROM_FW "pa3q" "system" "etc/public.libraries-secinput.samsung.txt"
 
 # AI Core / Language Model
-ADD_FROM_FW "extra" "system" "priv-app/SamsungAiCore"
-ADD_FROM_FW "extra" "system" "priv-app/OfflineLanguageModel_stub"
+ADD_FROM_FW "pa3q" "system" "priv-app/SamsungAiCore"
+ADD_FROM_FW "pa3q" "system" "priv-app/OfflineLanguageModel_stub"
 FF "GENAI_SUPPORT_OFFLINE_LANGUAGEMODEL" "TRUE"
 
 # Sketchbook (edge panel)
-ADD_FROM_FW "extra" "system" "app/SketchBook" 
+ADD_FROM_FW "pa3q" "system" "app/SketchBook" 
 
 # Wallpapers
-ADD_FROM_FW "extra" "product" "priv-app/AICore" 
-ADD_FROM_FW "extra" "product" "priv-app/AiWallpaper" 
-ADD_FROM_FW "extra" "system" "priv-app/SpriteWallpaper"  #Used to animate Infinity wallpapers
-ADD_FROM_FW "extra" "system" "priv-app/wallpaper-res"
+ADD_FROM_FW "pa3q" "product" "priv-app/AICore" 
+ADD_FROM_FW "pa3q" "product" "priv-app/AiWallpaper" 
+ADD_FROM_FW "pa3q" "system" "priv-app/SpriteWallpaper"  #Used to animate Infinity wallpapers
+ADD_FROM_FW "pa3q" "system" "priv-app/wallpaper-res"
 
 # Photo Editor & Gallery
 SILENT NUKE_BLOAT "PhotoEditor_Full"
-ADD_FROM_FW "extra" "system" "priv-app/PhotoEditor_AIFull" 
-ADD_FROM_FW "extra" "system" "priv-app/LiveEffectService" 
-ADD_FROM_FW "extra" "system" "priv-app/VideoScan"
-ADD_FROM_FW "extra" "system" "app/VisionModel-Stub" 
-ADD_FROM_FW "extra" "system" "lib64/libArtifactDetector_v1.camera.samsung.so"
-ADD_FROM_FW "extra" "system" "lib64/libphotohdr.so"
-ADD_FROM_FW "extra" "system" "lib64/libtensorflowlite_gpu_delegate.so"
-ADD_FROM_FW "extra" "system" "lib64/libmediacapture.so"
-ADD_FROM_FW "extra" "system" "lib64/libmediacapture_jni.so"
-ADD_FROM_FW "extra" "system" "lib64/libmediacaptureservice.so"
-ADD_FROM_FW "extra" "system" "lib64/libvideoframedec.so"
-ADD_FROM_FW "extra" "system" "lib64/libveframework.videoeditor.samsung.so"
-ADD_FROM_FW "extra" "system" "lib64/libsbs.so"
-ADD_FROM_FW "extra" "system" "lib64/libsimba.media.samsung.so"
+ADD_FROM_FW "pa3q" "system" "priv-app/PhotoEditor_AIFull" 
+ADD_FROM_FW "pa3q" "system" "priv-app/LiveEffectService" 
+ADD_FROM_FW "pa3q" "system" "priv-app/VideoScan"
+ADD_FROM_FW "pa3q" "system" "app/VisionModel-Stub" 
+ADD_FROM_FW "pa3q" "system" "lib64/libArtifactDetector_v1.camera.samsung.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libphotohdr.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libtensorflowlite_gpu_delegate.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libmediacapture.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libmediacapture_jni.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libmediacaptureservice.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libvideoframedec.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libveframework.videoeditor.samsung.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libsbs.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libsimba.media.samsung.so"
 FF "SAIV_SUPPORT_3DPHOTO" "TRUE"
 FF "GALLERY_CONFIG_ZOOM_TYPE" "ZOOM_2K"
 FF "GALLERY_SUPPORT_LOG_CORRECT_COLOR" "TRUE"
@@ -77,24 +77,24 @@ FF "GRAPHICS_SUPPORT_TOUCH_FAST_RESPONSE" "TRUE"
 fi
 
 #Permissions
-ADD_FROM_FW "extra" "system" "etc/permissions" 
-ADD_FROM_FW "extra" "system" "etc/default-permissions"
+ADD_FROM_FW "pa3q" "system" "etc/permissions" 
+ADD_FROM_FW "pa3q" "system" "etc/default-permissions"
 
 # Bixby 
-ADD_FROM_FW "extra" "system" "priv-app/BixbyInterpreter" 
+ADD_FROM_FW "pa3q" "system" "priv-app/BixbyInterpreter" 
 
 # Phone Packages
-ADD_FROM_FW "extra" "system" "priv-app/SamsungInCallUI" 
-ADD_FROM_FW "extra" "system" "priv-app/SamsungIntelliVoiceServices" 
-ADD_FROM_FW "extra" "system" "priv-app/SamsungDialer" 
+ADD_FROM_FW "pa3q" "system" "priv-app/SamsungInCallUI" 
+ADD_FROM_FW "pa3q" "system" "priv-app/SamsungIntelliVoiceServices" 
+ADD_FROM_FW "pa3q" "system" "priv-app/SamsungDialer" 
 
 # Screenshot and Keyboard etc
-ADD_FROM_FW "extra" "system" "app/HoneyBoard" 
-ADD_FROM_FW "extra" "system" "app/SmartCapture" 
-ADD_FROM_FW "extra" "system" "app/VisualCloudCore" 
+ADD_FROM_FW "pa3q" "system" "app/HoneyBoard" 
+ADD_FROM_FW "pa3q" "system" "app/SmartCapture" 
+ADD_FROM_FW "pa3q" "system" "app/VisualCloudCore" 
 
 # Ringtones ACH and bootanimation
-ADD_FROM_FW "extra" "system" "media" 
+ADD_FROM_FW "pa3q" "system" "media" 
 
 # Extras
 FF "GENAI_CONFIG_LLM_VERSION" "0.40"
@@ -109,11 +109,11 @@ FF "COMMON_CONFIG_SMARTTUTOR_PACKAGES_PATH" ""
 FF "COMMON_SUPPORT_ULTRA_POWER_SAVING" "TRUE"
 
 #Media Context
-ADD_FROM_FW "extra" "system" "etc/mediacontextanalyzer"
+ADD_FROM_FW "pa3q" "system" "etc/mediacontextanalyzer"
 FF "MMFW_SUPPORT_MEDIA_CONTEXT_ANALYZER" "TRUE"
-ADD_FROM_FW "extra" "system" "lib64/libcontextanalyzer_jni.media.samsung.so"
-ADD_FROM_FW "extra" "system" "lib64/libvideo-highlight-arm64-v8a.so"
-ADD_FROM_FW "extra" "system" "lib64/libmediacontextanalyzer.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libcontextanalyzer_jni.media.samsung.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libvideo-highlight-arm64-v8a.so"
+ADD_FROM_FW "pa3q" "system" "lib64/libmediacontextanalyzer.so"
 
 local feature_xml="$WORKSPACE/system/system/etc/floating_feature.xml"
 
@@ -128,9 +128,9 @@ fi
 
 # Semantic Search Core
 FF "MSCH_SUPPORT_NLSEARCH" "TRUE"
-ADD_FROM_FW "extra" "system" "etc/mediasearch"
-ADD_FROM_FW "extra" "system" "priv-app/MediaSearch/MediaSearch.apk"
-ADD_FROM_FW "extra" "system" "priv-app/SemanticSearchCore/SemanticSearchCore.apk"
+ADD_FROM_FW "pa3q" "system" "etc/mediasearch"
+ADD_FROM_FW "pa3q" "system" "priv-app/MediaSearch/MediaSearch.apk"
+ADD_FROM_FW "pa3q" "system" "priv-app/SemanticSearchCore/SemanticSearchCore.apk"
 
 # PhotoHDR (Will not work without 64bit only surfaceflinger)
 # FF "MMFW_SUPPORT_PHOTOHDR" "TRUE"
@@ -138,10 +138,10 @@ ADD_FROM_FW "extra" "system" "priv-app/SemanticSearchCore/SemanticSearchCore.apk
 
 # S23 Ultra have same HFR modes and features S25U have
 if [ "$CODENAME" = "dm3q" ]; then
-    ADD_FROM_FW "extra" "system" "priv-app/SecSettings"
-    ADD_FROM_FW "extra" "system" "priv-app/SettingsProvider"
+    ADD_FROM_FW "pa3q" "system" "priv-app/SecSettings"
+    ADD_FROM_FW "pa3q" "system" "priv-app/SettingsProvider"
 fi
-    ADD_FROM_FW "extra" "system" "priv-app/SecSettingsIntelligence.apk"
+    ADD_FROM_FW "pa3q" "system" "priv-app/SecSettingsIntelligence.apk"
 
 # Set props
 BPROP "system" "ro.product.system.model" "SM-S938B"
@@ -150,9 +150,9 @@ BPROP "product" "ro.product.product.model" "SM-S938B"
 # https://github.com/salvogiangri/UN1CA/commit/e18fb23cf459ae160187b614b6bde0938717b6ef
 BPROP "product" "ro.product.product.name" "$CODENAME"
 
-fi
 
 # Basic features
 FF "SUPPORT_SCREEN_RECORDER" "TRUE"
 FF "VOICERECORDER_CONFIG_DEF_MODE" "normal,interview,voicememo"
 FF "SUPPORT_LOW_HEAT_MODE" "TRUE"
+

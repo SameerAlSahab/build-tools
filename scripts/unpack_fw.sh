@@ -22,15 +22,18 @@ EXTRACT_ROM() {
 
     local targets=(
         "$MODEL:$CSC:main"
-        "${EXTRA_MODEL:-}:$EXTRA_CSC:extra"
         "${STOCK_MODEL:-}:$STOCK_CSC:stock"
     )
+
 
     local processed=""
 
     for entry in "${targets[@]}"; do
         IFS=":" read -r m c type <<< "$entry"
         [[ -z "$m" || -z "$c" ]] && continue
+
+		
+		DOWNLOAD_FW "$type"     || ERROR_EXIT "Firmware download failed"
 
         local fw_id="${m}_${c}"
         if [[ "$processed" =~ "$fw_id" ]]; then
@@ -99,9 +102,12 @@ EXTRACT_FIRMWARE() {
         return 1
     }
 
-    if IS_GITHUB_ACTIONS; then
-        rm -rf "$odin_dir"
-    fi
+    # Free space ASAP on GitHub Actions
+        if IS_GITHUB_ACTIONS; then
+            rm -f "$ap_file"
+            rm -rf "$odin_dir"
+        fi
+
 
     [[ ! -f "$super_img" ]] && {
         rm -f "$UNPACK_CONF" "${work_model}/.extraction_complete"
@@ -126,8 +132,7 @@ EXTRACT_FIRMWARE() {
         local lpdump_output
         lpdump_output=$("$BIN/android-tools/lpdump" "$super_img" 2>&1) || {
             rm -f "$UNPACK_CONF" "${work_model}/.extraction_complete"
-            ERROR_EXIT "lpdump failed for $model"
-            return 1
+            ERROR_EXIT "Failed to generate super metadata for $model"
         }
 
         local super_size metadata_size metadata_slots group_name group_size
@@ -155,16 +160,19 @@ PARTITIONS=""
 FILESYSTEM="$fstype"
 EOF
         else
-            LOG_WARN "Incomplete super metadata for $model"
+            ERROR_EXIT "Incomplete super metadata for $model"
         fi
     fi
 
-    "$BIN/android-tools/lpunpack" "$super_img" "$work_model/" || {
+
+RUN_CMD "Extracting partitions" \
+    "\"$BIN/android-tools/lpunpack\" \"$super_img\" \"$work_model/\"" || {
         rm -f "$UNPACK_CONF" "${work_model}/.extraction_complete"
         ERROR_EXIT "Failed to extract partitions from $model"
-        return 1
     }
-    LOG_END "Partitions unpacked"
+
+LOG_END "Partitions unpacked"
+
 
     rm -f "$super_img"
 
@@ -296,18 +304,18 @@ UNPACK_PARTITION() {
 
 
     tmp_mount_dir=$(mktemp -d)
-    trap 'umount "$tmp_mount_dir" &>/dev/null; fusermount -u "$tmp_mount_dir" &>/dev/null; rm -rf "$tmp_mount_dir"' RETURN
+    trap 'SUDO umount "$tmp_mount_dir" &>/dev/null; fusermount -u "$tmp_mount_dir" &>/dev/null; rm -rf "$tmp_mount_dir"' RETURN
 
 
 case $fstype in
     ext4|f2fs)
-            mount -o ro "$image_path" "$tmp_mount_dir" >/dev/null || {
+            SUDO mount -o ro "$image_path" "$tmp_mount_dir" >/dev/null || {
             ERROR_EXIT "EXT4 mount failed for $partition_name"
             return 1
         }
         ;;
     erofs)
-            "$BIN/erofs-utils/fuse.erofs" "$image_path" "$tmp_mount_dir" 2> >(grep -v '^<W>' >&2) >/dev/null || {
+            SUDO "$BIN/erofs-utils/fuse.erofs" "$image_path" "$tmp_mount_dir" 2> >(grep -v '^<W>' >&2) >/dev/null || {
             ERROR_EXIT "EROFS mount failed for $partition_name"
             return 1
         }
@@ -319,7 +327,7 @@ case $fstype in
 esac
 
 
-        cp -a -T "$tmp_mount_dir" "$partition_out_dir" || {
+        SUDO cp -a -T "$tmp_mount_dir" "$partition_out_dir" || {
         ERROR_EXIT "Cannot copy files to unpack directory for $partition_name"
         return 1
     }
@@ -333,14 +341,14 @@ esac
 
     # Generate fs_config: UID, GID, permissions, capabilities
     # Format: <path> <uid> <gid> <mode> capabilities=<capability_mask>
-    find "$tmp_mount_dir" | xargs stat -c "%n %u %g %a capabilities=0x0" > "$fs_config_file" || {
+    SUDO find "$tmp_mount_dir" | xargs stat -c "%n %u %g %a capabilities=0x0" > "$fs_config_file" || {
         ERROR_EXIT "Cannot generate file config for $partition_name"
         return 1
     }
 
     # Generate file_contexts: SELinux security contexts
     # Format: <path> <selinux_context>
-    find "$tmp_mount_dir" | xargs -I {} sh -c 'echo "{} $(getfattr -n security.selinux --only-values -h --absolute-names "{}")"' sh > "$file_contexts_file" || {
+    SUDO find "$tmp_mount_dir" | xargs -I {} sh -c 'echo "{} $(getfattr -n security.selinux --only-values -h --absolute-names "{}")"' sh > "$file_contexts_file" || {
         ERROR_EXIT "Cannot generate file contexts for $partition_name"
         return 1
     }
@@ -407,7 +415,7 @@ _GET_CAPABILITIES_HEX() {
 
 
     {
-        cap_raw=$(getfattr -n security.capability --only-values -h --absolute-names "$file_path")
+        cap_raw=$(SUDO getfattr -n security.capability --only-values -h --absolute-names "$file_path")
 
         [[ -z "$cap_raw" ]] && { echo "0x0"; return; }
 

@@ -21,48 +21,47 @@ FW_BASE="${FW_DIR}/downloaded"
 
 
 DOWNLOAD_FW() {
+    local target_fw="${1:-}"
     local tmp_dir="${FW_BASE}/tmp_download"
 
-    if _CHECK_NETWORK_CONNECTION; then
-        LOG_INFO "Internet connection [OK]"
-      else
-        LOG_WARN "Cannot connect to internet."
-    fi
+
+    _CHECK_NETWORK_CONNECTION && LOG_INFO "Internet connection [OK]" || LOG_WARN "Cannot connect to internet."
 
     [[ -z "$MODEL$EXTRA_MODEL$STOCK_MODEL" ]] && ERROR_EXIT "No firmware configs found."
 
     mkdir -p "$FW_BASE"
-
     declare -A processed_models
 
-    for cfg in "MAIN|$MODEL|$CSC|$IMEI" "EXTRA|$EXTRA_MODEL|$EXTRA_CSC|${EXTRA_IMEI:-$IMEI}" "STOCK|$STOCK_MODEL|$STOCK_CSC|$STOCK_IMEI"; do
+    for cfg in \
+      "MAIN|$MODEL|$CSC|$IMEI" \
+      "EXTRA|$EXTRA_MODEL|$EXTRA_CSC|${EXTRA_IMEI:-$IMEI}" \
+      "STOCK|$STOCK_MODEL|$STOCK_CSC|$STOCK_IMEI"
+    do
         IFS="|" read -r prefix mod reg imei <<< "$cfg"
-
 
         [[ -z "$mod" || -z "$reg" ]] && continue
 
 
-        if [[ -v "processed_models[$mod]" ]]; then
+        if [[ -n "$target_fw" && "${prefix,,}" != "${target_fw,,}" ]]; then
             continue
         fi
 
+        [[ -v "processed_models[$mod]" ]] && continue
         processed_models["$mod"]=1
 
-
-        _PROCESS_FIRMWARE "$prefix" "$mod" "$reg" "$imei" "$FW_BASE" "$tmp_dir"
+        FETCH_FW "$prefix" "$mod" "$reg" "$imei" "$FW_BASE" "$tmp_dir"
     done
 
     rm -rf "$tmp_dir"
-    LOG_END "Firmware downloads complete."
 }
 
 
-_PROCESS_FIRMWARE() {
+FETCH_FW() {
     local prefix="$1" mod="$2" reg="$3" imei="$4" base="$5" tmp="$6"
     local target="${base}/${mod}_${reg}"
     local meta="${target}/firmware.info"
     local fw_out="${tmp}/${mod}_${reg}"
-    LOG_INFO "Checking $prefix Firmware: $mod ($reg)..."
+    LOG_INFO "Checking $prefix Firmware for $mod ($reg)..."
 
 
     local has_local_fw=false
@@ -94,7 +93,7 @@ _PROCESS_FIRMWARE() {
             LOG_INFO "Cannot connect to the internet. Using existing local firmware."
             return 0
         fi
-        ERROR_EXIT "Connection failed and no valid local firmware found for $mod ($reg)"
+        ERROR_EXIT "No internet connection and existing firmware found for $mod ($reg)"
     fi
 
     LOG_INFO "Latest version: $ver_simple (Android $android_ver)"
@@ -104,7 +103,7 @@ _PROCESS_FIRMWARE() {
     [[ -f "$meta" ]] && current=$(<"$meta")
 
     if [[ "$current" == "$ver_full" && "$has_local_fw" == true ]]; then
-        LOG_END "$prefix firmware is up to date ($ver_simple)"
+        LOG_END "$prefix firmware is up to date/latest ($ver_simple)"
         return 0
     fi
 
@@ -115,11 +114,11 @@ _PROCESS_FIRMWARE() {
         [[ -n "$current" ]] && local_ver=$(echo "$current" | cut -d'_' -f2-)
         prompt="Newer firmware available. Current: $local_ver. Download update?"
     else
-        prompt="No valid local firmware found for $prefix. Download $ver_simple?"
+        prompt="No existing firmware found for $prefix. Download $ver_simple?"
     fi
 
     CONFIRM_ACTION "$prompt" "true" || {
-        [[ "$has_local_fw" == true ]] && return 0 || ERROR_EXIT "Cannot proceed without firmware for $prefix"
+        [[ "$has_local_fw" == true ]] && return 0 || ERROR_EXIT "Cannot proceed further without firmware for $prefix"
     }
 
     mkdir -p "$target"
@@ -129,7 +128,7 @@ rm -rf "$tmp" && mkdir -p "$tmp"
 
 (
   cd "$tmp" 
-  "$BIN/sammyfirm/sammyfirm" -m "$mod" -r "$reg" -i "$imei"
+  "$BIN/samfirm/samfirm.js" -m "$mod" -r "$reg" -i "$imei"
 )
 
 
@@ -159,7 +158,7 @@ fi
             rm -rf "$fs_path" "$WORKSPACE"
         fi
 
-        LOG_END "Successfully downloaded and installed $prefix firmware ($ver_simple)"
+        LOG_END "Successfully downloaded $prefix firmware ($ver_simple)"
 }
 
 
@@ -187,7 +186,7 @@ _VALIDATE_AP_FILE() {
     lz4_files=$(tar -tf "$ap_file" | grep '\.lz4$' 2>/dev/null)
 
     if [[ -z "$lz4_files" ]]; then
-        LOG_DEBUG "No .lz4 payloads found in $ap_file to validate."
+        LOG "No .lz4 payloads found in $ap_file to validate."
         return 1
     fi
 
@@ -236,10 +235,10 @@ DLOAD() {
     tmpfile=$(mktemp "${path}/dl.XXXX")
 
 
-    echo "[+] Downloading: $(basename "$url")"
+    LOG "Downloading: $(basename "$url")"
 
     if ! curl -LSs -o "$tmpfile" "$url"; then
-        echo "[-] Failed to fetch from $url"
+        ERROR_EXIT "Failed to fetch from $url"
         rm -f "$tmpfile"
         return 1
     fi

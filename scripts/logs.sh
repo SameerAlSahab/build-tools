@@ -127,63 +127,52 @@ LOG() {
 RUN_CMD() {
     local desc="$1"
     shift
-    local cmd="$@"
-    local start_ts
-    local end_ts
-    local duration
-    local tmp_log
-    local spin='-\|/'
-    local i=0
-    local pid
+    local cmd="$*"
+    local start_ts end_ts duration
+    local tmp_log spin='-\|/' i=0 pid
 
     start_ts=$(date +%s)
     tmp_log=$(mktemp)
 
-    echo -ne "${GRAY}[$(_TIMESTAMP)]${NC} ${BLUE}[*]${NC}  $desc... "
+    echo -ne "${GRAY}[$(_TIMESTAMP)]${NC} ${BLUE}[*]${NC} $desc... "
 
-    eval "$cmd" > "$tmp_log" 2>&1 &
+    eval "$cmd" >"$tmp_log" 2>&1 &
     pid=$!
 
-    if ! IS_GITHUB_ACTIONS; then
+    if IS_INTERACTIVE; then
         tput civis 2>/dev/null
         while kill -0 "$pid" 2>/dev/null; do
-            i=$(( (i+1) % 4 ))
+            i=$(( (i + 1) % 4 ))
             printf "\b${CYAN}%s${NC}" "${spin:$i:1}"
             sleep 0.1
         done
         tput cnorm 2>/dev/null
     else
-        # In CI, just show a static indicator
-        printf "${CYAN}[|]${NC}"
-        wait "$pid"
+        
+        printf "${CYAN}[*]${NC}"
     fi
 
     wait "$pid"
     local exit_code=$?
+
     end_ts=$(date +%s)
-    duration=$(_GET_DURATION $start_ts $end_ts)
+    duration=$(_GET_DURATION "$start_ts" "$end_ts")
 
-    if [ $exit_code -eq 0 ]; then
+    if (( exit_code == 0 )); then
         printf "\b${GREEN}[OK]${NC} (${duration})\n"
-        rm "$tmp_log"
+        rm -f "$tmp_log"
     else
-        printf "\b${RED}[FAIL]${NC}\n"
-
-        echo
+        printf "\b${RED}[FAIL]${NC}\n\n"
         printf "${RED}>> ERROR LOG OUTPUT:${NC}\n"
         _PRINT_DIVIDER "="
-       
-        tail -n 20 "$tmp_log" | while read -r line; do
-             printf "${RED}| %s${NC}\n" "$line"
-        done
+        tail -n 20 "$tmp_log" | sed "s/^/${RED}| /"
         _PRINT_DIVIDER "="
-        echo
-
-        rm "$tmp_log"
-
-        ERROR_EXIT "Build failed during: $desc" $exit_code
+        rm -f "$tmp_log"
+        ERROR_EXIT "Build failed during: $desc" "$exit_code"
     fi
 }
+
+
 
 # Execute command silently
 SILENT() {
@@ -268,4 +257,8 @@ _UPDATE_LOG() {
     if [[ "$end_flag" == "DONE" || "$end_flag" == "END" ]]; then
         echo ""
     fi
+}
+
+IS_INTERACTIVE() {
+    [[ -t 1 && -t 2 ]] && ! IS_GITHUB_ACTIONS
 }

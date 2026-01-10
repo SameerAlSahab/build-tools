@@ -148,40 +148,51 @@ ADD_FROM_FW() {
     [[ -z "$source_type" || -z "$src_partition" || -z "$src_path" ]] && \
         ERROR_EXIT "Usage: ADD_FROM_FW <source_type> <src_partition> <src_path> [dest_partition]"
     
-    
     VALIDATE_WORKDIR "$source_type" || \
         ERROR_EXIT "Source workdir '$source_type' is not ready"
     
-   
     local src_dir dest_dir
     src_dir=$(GET_PARTITION_PATH "$src_partition" "$source_type") || \
-        ERROR_EXIT "Failed to resolve source partition: $src_partition"
+        ERROR_EXIT "Failed to get source partition: $src_partition"
     
     dest_dir=$(GET_PARTITION_PATH "$dest_partition") || \
-        ERROR_EXIT "Failed to resolve destination partition: $dest_partition"
+        ERROR_EXIT "Failed to get destination partition: $dest_partition"
     
-    
-    local clean_src_path
+    local clean_src_path full_src full_dest
     clean_src_path=$(_SANITIZE_PATH "$src_path")
-    local full_src="${src_dir}/${clean_src_path}"
-    local full_dest="${dest_dir}/${clean_src_path}"
+    full_src="${src_dir}/${clean_src_path}"
+    full_dest="${dest_dir}/${clean_src_path}"
+
     
-    
-    [[ ! -e "$full_src" && ! -L "$full_src" ]] && {
-        LOG_WARN "Source file does not exist: $full_src"
-        return 0
-    }
-    
-   
-    local dest_parent
-    dest_parent=$(dirname "$full_dest")
-    [[ ! -d "$dest_parent" ]] && mkdir -p "$dest_parent"
-    
-   
-    rm -rf "$full_dest" 2>/dev/null
-    cp -r "$full_src" "$full_dest" 2>/dev/null || \
-        ERROR_EXIT "Failed copying ${src_partition}/${clean_src_path} from ${source_type}"
+    if [[ -e "$full_src" || -L "$full_src" ]]; then
+        local dest_parent
+        dest_parent=$(dirname "$full_dest")
+        [[ ! -d "$dest_parent" ]] && mkdir -p "$dest_parent"
+
+        rm -rf "$full_dest" 2>/dev/null
+        cp -r "$full_src" "$full_dest" 2>/dev/null || \
+            ERROR_EXIT "Failed copying ${src_partition}/${clean_src_path} from ${source_type}"
+    fi
+
+  
+    local split_files=()
+    if ls "${full_src}."* >/dev/null 2>&1; then
+        split_files=("${full_src}."*)
+    elif ls "${full_src}_"* >/dev/null 2>&1; then
+        split_files=("${full_src}_"*)
+    fi
+
+    if [[ ${#split_files[@]} -gt 0 ]]; then
+        [[ -d "$full_dest" ]] && full_dest="${full_dest}/$(basename "$src_path")"
+        mkdir -p "$(dirname "$full_dest")"
+
+        bash -c "cat ${full_src}.* > \"$full_dest\" 2>/dev/null || cat ${full_src}_* > \"$full_dest\" 2>/dev/null" || \
+            ERROR_EXIT "Failed to merge split files from firmware."
+    fi
+
+    LOG_WARN "Source file does not exist: $full_src"
 }
+
 
 
 #

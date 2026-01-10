@@ -49,9 +49,6 @@ VALIDATE_DEVICE_VARS() {
 SETUP_DEVICE_ENV() {
     LOG_DIALOG "Setting up Device environment" "Validating build parameters and sourcing data"
 
-    CHECK_ALL_DEPENDENCIES
-	
-	chmod +x -R "$BIN"
 
     if ! VALIDATE_DEVICE_VARS; then
         LOG_WARN "Failed to validate device environment variables."
@@ -86,9 +83,6 @@ SETUP_DEVICE_ENV() {
     if ! IS_GITHUB_ACTIONS; then
         echo -e "Imported config. Press ${GREEN}ENTER${NC} to proceed with the build, or ${RED}Ctrl+C${NC} to abort."
         read -r user_input
-
-    DOWNLOAD_FW     || ERROR_EXIT "Firmware download failed"
-
     else
         LOG_INFO "CI environment detected, proceeding with build automatically."
     fi
@@ -110,6 +104,7 @@ dependencies_config=(
     "attr|attr|xattr (SELinux configs)|true"
     "zipalign|android-sdk-build-tools|Zipalign (APKs alignment)|true"
     "f2fs-tools|f2fs-tools|(Tools for F2FS)|true" 
+	"nodejs|nodejs|Node.js (JS-based utilities)|true"
 	"jq|jq|(For JQ)|true"
 	"ffmpeg|ffmpeg|(Video conversion)|true"
 	"webp|libwebp|(WEBP conversion)|true"
@@ -192,76 +187,59 @@ CHECK_DEPENDENCY() {
     local pkg_name="$1"
     local pretty_name="${2:-$pkg_name}"
     local critical="${3:-false}"
-    local is_installed=false
 
-    # Check if package is already installed
+
     if [[ "$DISTRO_TYPE" == "arch" ]]; then
-        if pacman -Q "$pkg_name" &>/dev/null; then 
-            is_installed=true
-            return 0
-        fi
+        pacman -Q "$pkg_name" &>/dev/null && return 0
     else
-        if dpkg -s "$pkg_name" &>/dev/null; then 
-            is_installed=true
-            return 0
-        fi
+        dpkg -s "$pkg_name" &>/dev/null && return 0
     fi
 
     LOG_BEGIN "Installing dependency: $pretty_name..."
     local install_success=false
 
+    # Arch
     if [[ "$DISTRO_TYPE" == "arch" ]]; then
-        # Arch
-        if sudo pacman -S --noconfirm "$pkg_name" &>/dev/null; then
+        # Try pacman first (Official Repos)
+        if sudo pacman -S --noconfirm --needed "$pkg_name" &>/dev/null; then
             install_success=true
         else
-        
-            # Failed in official repos. Try AUR
+            # Try AUR helper if pacman fails
             if ! command -v yay &>/dev/null; then
-                LOG_BEGIN "AUR helper 'yay' missing. Bootstrapping from source (this takes a moment)..."
-                
-                # Install dependencies for building AUR packages
-                sudo pacman -S --needed --noconfirm git base-devel &>/dev/null
-                
-                # Clone and build yay
-                local build_dir=$(mktemp -d)
-                git clone https://aur.archlinux.org/yay.git "$build_dir" &>/dev/null
-                
-                local current_dir=$(pwd)
-                cd "$build_dir" || return 1
-                
-                if makepkg -si --noconfirm &>/dev/null; then
-                    install_success=true
-                    LOG_INFO "Successfully installed yay AUR helper"
-                else
-                    ERROR_EXIT "Failed to compile 'yay'. Please install it manually."
-                fi
-                
-                cd "$current_dir"
-                rm -rf "$build_dir"
+                sudo pacman -S --noconfirm yay
             fi
 
-            # Retry install using yay
-            if yay -S --noconfirm "$pkg_name" &>/dev/null; then
+            if sudo -u "$(logname)" yay -S --noconfirm --needed --answerclean None --answerdiff None "$pkg_name" &>/dev/null; then
                 install_success=true
             fi
         fi
-    else
-        # Debian
+
+    # Debian/Ubuntu
+    elif [[ "$DISTRO_TYPE" == "debian" ]]; then
         if sudo apt-get install -y "$pkg_name" &>/dev/null; then
             install_success=true
         fi
     fi
+
 
     if $install_success; then
         return 0
     else
         if [[ "$critical" == "true" ]]; then
             ERROR_EXIT "Failed to install CRITICAL dependency: $pretty_name ($pkg_name)"
-            return 1
         else
             LOG_WARN "Failed to install optional dependency: $pretty_name"
             return 1
         fi
     fi
 }
+
+
+SUDO() {
+    if [[ $EUID -ne 0 ]]; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
+
