@@ -170,7 +170,6 @@ BUILD_SUPER_IMAGE() {
         --device-size "$SUPER_SIZE"
         --metadata-size "$METADATA_SIZE"
         --metadata-slots "$METADATA_SLOTS"
-        --sparse
         --group "$GROUP_NAME:$GROUP_SIZE"
         --output "$out_dir/super.img"
     )
