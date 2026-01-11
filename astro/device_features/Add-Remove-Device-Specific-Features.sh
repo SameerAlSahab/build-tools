@@ -2,6 +2,10 @@
 FF "SETTINGS_CONFIG_BRAND_NAME" "$MODEL_NAME"
 FF "CONFIG_SIOP_POLICY_FILENAME" "$SIOP_POLICY_NAME"
 FF "system" "ro.factory.model" "$STOCK_MODEL"
+##
+
+
+##
 
 # SPen
 AIR_COMMAND_PKGS=(
@@ -56,21 +60,42 @@ else
     : 
 fi
 
+##
+
+##
 
 # QHD and FHD displays
 # TODO: Modify HFR mode on SecSettings and framework otherwise control will be broken
+FF_FILE="$WORKSPACE/system/system/etc/floating_feature.xml"
+
 if [[ "$DEVICE_HAVE_QHD_PANEL" == "true" ]]; then
-    FF "COMMON_CONFIG_DYN_RESOLUTION_CONTROL" "WQHD,FHD,HD"
-    ADD_FROM_FW "pa3q" "system" "priv-app/SecSettings"
-else
+
+    if grep -q "WQHD" "$FF_FILE"; then
+        LOG_INFO "Device and source both have QHD res. Ignoring..."
+    else
+        LOG_INFO "Enabling QHD Support (Adding QHD Resolution support)..."
+        FF "SEC_FLOATING_FEATURE_COMMON_CONFIG_DYN_RESOLUTION_CONTROL" "WQHD,FHD,HD"
+        
+        # Add high-res Settings app from pa3q
+        ADD_FROM_FW "pa3q" "system" "priv-app/SecSettings"
+    fi
+
+else  
+    LOG_INFO "Device does not support QHD. Disabling QHD features..."
+    
     FF "SEC_FLOATING_FEATURE_COMMON_CONFIG_DYN_RESOLUTION_CONTROL" ""
+    # Replace Settings app with non-QHD version from dm1q
     ADD_FROM_FW "dm1q" "system" "priv-app/SecSettings"
 fi
 
 
-# High Refresh rate displays
-FRAMERATE_OVERRIDE=$(GET_PROP "vendor" "ro.surface_flinger.enable_frame_rate_override")
+##
 
+
+# High Refresh rate displays
+# TODO: Edit SecSettings resolution string for actual hz 
+# TODO: Add  logic to remove high refresh rate option
+FRAMERATE_OVERRIDE=$(GET_PROP "vendor" "ro.surface_flinger.enable_frame_rate_override")
 
 if [[ "$DEVICE_HAVE_HIGH_REFRESH_RATE" == "true" ]] && [[ "$FRAMERATE_OVERRIDE" != "true" ]]; then
 
@@ -89,3 +114,5 @@ if [[ "$DEVICE_HAVE_HIGH_REFRESH_RATE" == "true" ]] && [[ "$FRAMERATE_OVERRIDE" 
         FF "LCD_CONFIG_HFR_SUPPORTED_REFRESH_RATE" "$DEVICE_DISPLAY_REFRESH_RATE_VALUES_HZ"
     fi
 fi
+
+##
