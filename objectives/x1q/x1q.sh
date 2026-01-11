@@ -1,7 +1,7 @@
 # Objective details
 MODEL_NAME="Galaxy S20 5G"
 CODENAME="x1q"
-VNDK="33"
+VNDK="30"
 
 # The model using as source
 # r9q is less bloated and similar structure as x1q
