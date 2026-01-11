@@ -102,7 +102,7 @@ EOF
     LOG_WARN "VNDK mismatch (Current: ${current_vndk:-None} and Target: $VNDK). Patching..."
 
     local apex_name="com.android.vndk.v${VNDK}.apex"
-    local source_apex="${PROJECT_DIR}/vndk/v${VNDK}/${apex_name}"
+    local source_apex="${BLOBS_DIR}/vndk/v${VNDK}/${apex_name}"
     local dest_rel_path="apex/${apex_name}"
 
 
