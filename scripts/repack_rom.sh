@@ -223,9 +223,9 @@ CREATE_FLASHABLE_ZIP() {
 
     fi
     
-# Let GitHub’s beefy CPUs suffer with max compression so we can download fewer MBs and save dad’s money , maybe not too big difference in size but still 
+
 if IS_GITHUB_ACTIONS; then
-    COMPRESSION_LEVEL=9
+    COMPRESSION_LEVEL=6
 else
     COMPRESSION_LEVEL=4
 fi
