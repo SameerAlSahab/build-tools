@@ -224,7 +224,7 @@ CREATE_FLASHABLE_ZIP() {
     fi
 
     RUN_CMD "Building ROM zip" \
-        "cd '$build_dir' && 7z a -tzip -mx=3 '$zip_path' ."
+        "cd '$build_dir' && 7z a -tzip -mx=5 '$zip_path' ."
 
     rm -rf "$build_dir"
 
