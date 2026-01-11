@@ -5,8 +5,11 @@ BPROP "system" "ro.factory.model" "$STOCK_MODEL"
 ##
 
 
+
 local FF_FILE="$WORKSPACE/system/system/etc/floating_feature.xml"
 local STOCK_FF_FILE="$STOCK_FW/system/system/etc/floating_feature.xml"
+
+
 ## Camera
 # Device based camera fixes can be found on objectives folder
 REMOVE "system" "cameradata/portrait_data"
@@ -15,22 +18,21 @@ REMOVE "system" "cameradata/singletake"
 
 ADD_FROM_FW "stock" "system" "cameradata"
 
-xmlstarlet ed -L -d '//SEC_FLOATING_FEATURE_CAMERA*' "$FF_FILE"
+xmlstarlet ed -L -d '//*[starts-with(name(), "SEC_FLOATING_FEATURE_CAMERA")]' "$FF_FILE"
+
+if [[ ! -f "$STOCK_FF_FILE" ]]; then
+    ERROR_EXIT "Stock floating_feature.xml not found"
+    return 1
+fi
 
 
-    if [[ ! -f "$STOCK_FF_FILE" ]]; then
-        ERROR_EXIT "Stock floating_feature.xml not found"
-        return 1
-    fi
-
-
-    xmlstarlet sel -t \
-        -m '//SEC_FLOATING_FEATURE_CAMERA*' \
-        -v 'name()' -o '=' -v '.' -n \
-        "$STOCK_FF_FILE" | while IFS='=' read -r tag value; do
-            [[ -z "$tag" ]] && continue
-            FF "$tag" "$value"
-        done
+xmlstarlet sel -t \
+    -m '//*[starts-with(name(), "SEC_FLOATING_FEATURE_CAMERA")]' \
+    -v 'name()' -o '=' -v '.' -n \
+    "$STOCK_FF_FILE" | while IFS='=' read -r tag value; do
+        [[ -z "$tag" ]] && continue
+        FF "$tag" "$value"
+    done
 ##
 
 # SPen
