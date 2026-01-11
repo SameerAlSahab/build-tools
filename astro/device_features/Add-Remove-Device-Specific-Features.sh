@@ -1,43 +1,91 @@
-# Basic
+# Basic 
 FF "SETTINGS_CONFIG_BRAND_NAME" "$MODEL_NAME"
 FF "CONFIG_SIOP_POLICY_FILENAME" "$SIOP_POLICY_NAME"
 FF "system" "ro.factory.model" "$STOCK_MODEL"
 
-if $DEVICE_HAVE_SPEN_SUPPORT== true && EXISTS "system" "priv-app/AirCommand" ; then
-LOG_INFO "Device or source both have spen support. Ignoring..."
-elif 
-$DEVICE_HAVE_SPEN_SUPPORT==false && EXITS "system" "priv-app/AirCommand" ; then
-SILENT NUKE_BLOAT "AirCommand" "AirGlance" 
-FF "SUPPORT_EAGLE_EYE" ""
-elif
-device have but source dont then 
-ADD_FROM_FW "pa3q" "system" "priv-app/AirCommand"
-FF "SUPPORT_EAGLE_EYE" "TRUE"
-same add_from_fw for other packages
+# SPen
+AIR_COMMAND_PKGS=(
+    "AirCommand"
+    "AirGlance"
+    "AirReadingGlass"
+    "SmartEye"
+)
+
+AIR_COMMAND_FILES=(
+    "etc/default-permissions/default-permissions-com.samsung.android.service.aircommand.xml"
+    "etc/permissions/privapp-permissions-com.samsung.android.app.readingglass.xml"
+    "etc/permissions/privapp-permissions-com.samsung.android.service.aircommand.xml"
+    "etc/permissions/privapp-permissions-com.samsung.android.service.airviewdictionary.xml"
+    "etc/sysconfig/airviewdictionaryservice.xml"
+    "media/audio/pensounds"
+)
+
+
+if [[ "$DEVICE_HAVE_SPEN_SUPPORT" == "true" ]] && EXISTS "system" "priv-app/AirCommand"; then
+    LOG_INFO "Device and source both have SPen support. Ignoring..."
+
+elif [[ "$DEVICE_HAVE_SPEN_SUPPORT" == "false" ]] && EXISTS "system" "priv-app/AirCommand"; then
+    LOG_INFO "Device has no SPen but Source does. Removing bloat..."
+    
+    # Remove Packages
+    SILENT NUKE_BLOAT "${AIR_COMMAND_PKGS[@]}"
+    
+    # Remove Permission Files and Sounds
+    for file in "${AIR_COMMAND_FILES[@]}"; do
+        REMOVE "system" "$file"
+    done
+    
+    FF "SUPPORT_EAGLE_EYE" ""
+
+elif [[ "$DEVICE_HAVE_SPEN_SUPPORT" == "true" ]] && ! EXISTS "system" "priv-app/AirCommand"; then
+    LOG_INFO "Device has SPen but Source does not. Adding from Firmware..."
+
+  
+    for pkg in "${AIR_COMMAND_PKGS[@]}"; do
+        ADD_FROM_FW "pa3q" "system" "priv-app/$pkg"
+    done
+
+
+    for file in "${AIR_COMMAND_FILES[@]}"; do
+        ADD_FROM_FW "pa3q" "system" "$file"
+    done
+
+    FF "SUPPORT_EAGLE_EYE" "TRUE"
+
 else
-both dont have ignore
+    : 
+fi
 
-now , DEVICE_HAVE_QHD_PANEL == true then;
-FF "COMMON_CONFIG_DYN_RESOLUTION_CONTROL" "WQHD,FHD,HD"
+
+# QHD and FHD displays
+# TODO: Modify HFR mode on SecSettings and framework otherwise control will be broken
+if [[ "$DEVICE_HAVE_QHD_PANEL" == "true" ]]; then
+    FF "COMMON_CONFIG_DYN_RESOLUTION_CONTROL" "WQHD,FHD,HD"
+    ADD_FROM_FW "pa3q" "system" "priv-app/SecSettings"
 else
-FF "SEC_FLOATING_FEATURE_COMMON_CONFIG_DYN_RESOLUTION_CONTROL" ""
-
-DEVICE_HAVE_HIGH_REFRESH_RATE ==true && GET_PROP "vendor" "ro.surface_flinger.enable_frame_rate_override" is not value true or no line or return  ; then
-
-LOG_INFO "Adding Adaptive Refresh rate"
-BPROP "vendor" "debug.sf.show_refresh_rate_overlay_render_rate" "true"
-BPROP "vendor" "ro.surface_flinger.game_default_frame_rate_override" "60"
-BPROP "vendor" "ro.surface_flinger.use_content_detection_for_refresh_rate" "true"
-BPROP "vendor" "ro.surface_flinger.set_idle_timer_ms" "250"
-BPROP "vendor" "ro.surface_flinger.set_touch_timer_ms" "300"
-BPROP "vendor" "ro.surface_flinger.set_display_power_timer_ms" "200"
-BPROP "vendor" "ro.surface_flinger.enable_frame_rate_override" "true"
-
-now if var DEVICE_DISPLAY_HFR_VALUE and another one exist or given then do
-FF "LCD_CONFIG_HFR_MODE" "$DEVICE_DISPLAY_HFR_MODE"
-FF "LCD_CONFIG_HFR_SUPPORTED_REFRESH_RATE" "$DEVICE_DISPLAY_REFRESH_RATE_VALUES_HZ"
+    FF "SEC_FLOATING_FEATURE_COMMON_CONFIG_DYN_RESOLUTION_CONTROL" ""
+    ADD_FROM_FW "dm1q" "system" "priv-app/SecSettings"
+fi
 
 
+# High Refresh rate displays
+FRAMERATE_OVERRIDE=$(GET_PROP "vendor" "ro.surface_flinger.enable_frame_rate_override")
 
 
+if [[ "$DEVICE_HAVE_HIGH_REFRESH_RATE" == "true" ]] && [[ "$FRAMERATE_OVERRIDE" != "true" ]]; then
 
+    LOG_INFO "Adding Adaptive Refresh rate"
+    BPROP "vendor" "debug.sf.show_refresh_rate_overlay_render_rate" "true"
+    BPROP "vendor" "ro.surface_flinger.game_default_frame_rate_override" "60"
+    BPROP "vendor" "ro.surface_flinger.use_content_detection_for_refresh_rate" "true"
+    BPROP "vendor" "ro.surface_flinger.set_idle_timer_ms" "250"
+    BPROP "vendor" "ro.surface_flinger.set_touch_timer_ms" "300"
+    BPROP "vendor" "ro.surface_flinger.set_display_power_timer_ms" "200"
+    BPROP "vendor" "ro.surface_flinger.enable_frame_rate_override" "true"
+
+  
+    if [[ -n "$DEVICE_DISPLAY_HFR_MODE" ]] && [[ -n "$DEVICE_DISPLAY_REFRESH_RATE_VALUES_HZ" ]]; then
+        FF "LCD_CONFIG_HFR_MODE" "$DEVICE_DISPLAY_HFR_MODE"
+        FF "LCD_CONFIG_HFR_SUPPORTED_REFRESH_RATE" "$DEVICE_DISPLAY_REFRESH_RATE_VALUES_HZ"
+    fi
+fi
