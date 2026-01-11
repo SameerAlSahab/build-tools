@@ -78,4 +78,4 @@ jobs:
           fi
 
           echo "Uploading $ROM_FILE to PixelDrain..."
-          pd --api-key d3b5aa82-458e-423f-a3c8-487fa7ab63f0 upload "$ROM_FILE"
+          pd --api-key d3b5aa82-458e-423f-a3c8-487fa7ab63f0 upload "$ROM_FILE" | sed 's|api/file|u|g'
