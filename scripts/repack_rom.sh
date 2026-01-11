@@ -223,12 +223,7 @@ CREATE_FLASHABLE_ZIP() {
 
     fi
     
-
-if IS_GITHUB_ACTIONS; then
-    COMPRESSION_LEVEL=6
-else
     COMPRESSION_LEVEL=4
-fi
 
     RUN_CMD "Building ROM zip" \
         "cd '$build_dir' && 7z a -tzip -mx=$COMPRESSION_LEVEL '$zip_path' ."
