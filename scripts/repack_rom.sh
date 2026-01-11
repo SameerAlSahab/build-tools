@@ -222,9 +222,17 @@ CREATE_FLASHABLE_ZIP() {
         "$updater"
 
     fi
+    
+# Let GitHub’s beefy CPUs suffer with max compression so we can download fewer MBs and save dad’s money , maybe not too big difference in size but still 
+if IS_GITHUB_ACTIONS; then
+    COMPRESSION_LEVEL=9
+else
+    COMPRESSION_LEVEL=4
+fi
 
     RUN_CMD "Building ROM zip" \
-        "cd '$build_dir' && 7z a -tzip -mx=5 '$zip_path' ."
+        "cd '$build_dir' && 7z a -tzip -mx=$COMPRESSION_LEVEL '$zip_path' ."
+
 
     rm -rf "$build_dir"
 
