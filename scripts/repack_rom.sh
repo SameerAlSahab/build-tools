@@ -143,9 +143,9 @@ REPACK_PARTITION() {
 #
 BUILD_SUPER_IMAGE() {
     local out_dir="${DIROUT}"
-    local conf_file="$MAIN_WORKDIR/unpack.conf"
+    local conf_file="$MAIN_WORKSPACE/unpack.conf"
   
-    [[ -f "$STOCK_WORKDIR/unpack.conf" ]] && conf_file="$STOCK_WORKDIR/unpack.conf"
+    [[ -f "$STOCK_FW/unpack.conf" ]] && conf_file="$STOCK_FW/unpack.conf"
 
     [[ ! -f "$conf_file" ]] && ERROR_EXIT "unpack.conf not found for super image generation. Make sure you have stock firmware unpacked."
     
