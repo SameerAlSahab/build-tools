@@ -6,7 +6,7 @@ BPROP "system" "ro.factory.model" "$STOCK_MODEL"
 
 
 local FF_FILE="$WORKSPACE/system/system/etc/floating_feature.xml"
-local STOCK_FF_FILE="$STOCK_WORKDIR/system/system/etc/floating_feature.xml"
+local STOCK_FF_FILE="$STOCK_FW/system/system/etc/floating_feature.xml"
 ## Camera
 # Device based camera fixes can be found on objectives folder
 REMOVE "system" "cameradata/portrait_data"
