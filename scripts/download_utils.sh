@@ -61,7 +61,7 @@ FETCH_FW() {
     local target="${base}/${mod}_${reg}"
     local meta="${target}/firmware.info"
     local fw_out="${tmp}/${mod}_${reg}"
-    LOG_INFO "Checking $prefix Firmware for $mod ($reg)..."
+    LOG_INFO "Checking Firmware for $mod ($reg)..."
 
 
     local has_local_fw=false
