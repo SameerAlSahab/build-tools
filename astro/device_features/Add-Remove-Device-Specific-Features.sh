@@ -1,10 +1,36 @@
 # Basic 
 FF "SETTINGS_CONFIG_BRAND_NAME" "$MODEL_NAME"
 FF "CONFIG_SIOP_POLICY_FILENAME" "$SIOP_POLICY_NAME"
-FF "system" "ro.factory.model" "$STOCK_MODEL"
+BPROP "system" "ro.factory.model" "$STOCK_MODEL"
 ##
 
 
+local FF_FILE="$WORKSPACE/system/system/etc/floating_feature.xml"
+local STOCK_FF_FILE="$STOCK_WORKDIR/system/system/etc/floating_feature.xml"
+## Camera
+# Device based camera fixes can be found on objectives folder
+REMOVE "system" "cameradata/portrait_data"
+BPROP "system" "ro.product.system.name" "$CODENAME"
+REMOVE "system" "cameradata/singletake"
+
+ADD_FROM_FW "stock" "system" "cameradata"
+
+xmlstarlet ed -L -d '//SEC_FLOATING_FEATURE_CAMERA*' "$FF_FILE"
+
+
+    if [[ ! -f "$STOCK_FF_FILE" ]]; then
+        ERROR_EXIT "Stock floating_feature.xml not found"
+        return 1
+    fi
+
+
+    xmlstarlet sel -t \
+        -m '//SEC_FLOATING_FEATURE_CAMERA*' \
+        -v 'name()' -o '=' -v '.' -n \
+        "$STOCK_FF_FILE" | while IFS='=' read -r tag value; do
+            [[ -z "$tag" ]] && continue
+            FF "$tag" "$value"
+        done
 ##
 
 # SPen
@@ -66,11 +92,11 @@ fi
 
 # QHD and FHD displays
 # TODO: Modify HFR mode on SecSettings and framework otherwise control will be broken
-FF_FILE="$WORKSPACE/system/system/etc/floating_feature.xml"
+# TODO: Add framework and surfaceflinger patches too in future 
 
 if [[ "$DEVICE_HAVE_QHD_PANEL" == "true" ]]; then
 
-    if grep -q "WQHD" "$FF_FILE"; then
+    if grep -q "QHD" "$FF_FILE"; then
         LOG_INFO "Device and source both have QHD res. Ignoring..."
     else
         LOG_INFO "Enabling QHD Support (Adding QHD Resolution support)..."
