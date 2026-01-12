@@ -143,9 +143,9 @@ REPACK_PARTITION() {
 #
 BUILD_SUPER_IMAGE() {
     local out_dir="${DIROUT}"
-    local conf_file="$MAIN_WORKDIR/unpack.conf"
+    local conf_file="$MAIN_WORKSPACE/unpack.conf"
   
-    [[ -f "$STOCK_WORKDIR/unpack.conf" ]] && conf_file="$STOCK_WORKDIR/unpack.conf"
+    [[ -f "$STOCK_FW/unpack.conf" ]] && conf_file="$STOCK_FW/unpack.conf"
 
     [[ ! -f "$conf_file" ]] && ERROR_EXIT "unpack.conf not found for super image generation. Make sure you have stock firmware unpacked."
     
@@ -170,7 +170,6 @@ BUILD_SUPER_IMAGE() {
         --device-size "$SUPER_SIZE"
         --metadata-size "$METADATA_SIZE"
         --metadata-slots "$METADATA_SLOTS"
-        --sparse
         --group "$GROUP_NAME:$GROUP_SIZE"
         --output "$out_dir/super.img"
     )
@@ -223,9 +222,12 @@ CREATE_FLASHABLE_ZIP() {
         "$updater"
 
     fi
+    
+    COMPRESSION_LEVEL=4
 
     RUN_CMD "Building ROM zip" \
-        "cd '$build_dir' && 7z a -tzip -mx=3 '$zip_path' ."
+        "cd '$build_dir' && 7z a -tzip -mx=$COMPRESSION_LEVEL '$zip_path' ."
+
 
     rm -rf "$build_dir"
 

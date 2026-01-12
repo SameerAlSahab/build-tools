@@ -172,6 +172,7 @@ ADD_FROM_FW() {
         rm -rf "$full_dest" 2>/dev/null
         cp -r "$full_src" "$full_dest" 2>/dev/null || \
             ERROR_EXIT "Failed copying ${src_partition}/${clean_src_path} from ${source_type}"
+			return 0
     fi
 
   
@@ -188,6 +189,7 @@ ADD_FROM_FW() {
 
         bash -c "cat ${full_src}.* > \"$full_dest\" 2>/dev/null || cat ${full_src}_* > \"$full_dest\" 2>/dev/null" || \
             ERROR_EXIT "Failed to merge split files from firmware."
+			return 0
     fi
 
     LOG_WARN "Source file does not exist: $full_src"

@@ -17,12 +17,10 @@
 
 
 INIT_BUILD_ENV() {
-
-    CHECK_PRIVILEGES
     
-    MAIN_WORKDIR="${WORKDIR}/${MODEL}"
-    STOCK_WORKDIR="${WORKDIR}/${STOCK_MODEL:-$MODEL}"
-    EXTRA_WORKDIR="${WORKDIR}/${EXTRA_MODEL}"
+    MAIN_FW="${WORKDIR}/${MODEL}"
+    STOCK_FW="${WORKDIR}/${STOCK_MODEL:-$MODEL}"
+    EXTRA_FW="${WORKDIR}/${EXTRA_MODEL}"
 
     EXTRACT_ROM || ERROR_EXIT "Firmware extraction failed."
 
@@ -61,10 +59,10 @@ CREATE_WORKSPACE() {
 
 
     if [[ "$MODEL" == "$STOCK_MODEL" || -z "$STOCK_MODEL" ]]; then
-        LINK_PARTITIONS "$MAIN_WORKDIR" "$build_dir" "$config_dir" "${port_parts[@]}" "${oem_parts[@]}"
+        LINK_PARTITIONS "$MAIN_FW" "$build_dir" "$config_dir" "${port_parts[@]}" "${oem_parts[@]}"
     else
-        LINK_PARTITIONS "$MAIN_WORKDIR" "$build_dir" "$config_dir" "${port_parts[@]}"
-        LINK_PARTITIONS "$STOCK_WORKDIR" "$build_dir" "$config_dir" "${oem_parts[@]}"
+        LINK_PARTITIONS "$MAIN_FW" "$build_dir" "$config_dir" "${port_parts[@]}"
+        LINK_PARTITIONS "$STOCK_FW" "$build_dir" "$config_dir" "${oem_parts[@]}"
     fi
 
 
@@ -296,9 +294,9 @@ GET_FW_DIR() {
     local source_firmware="$1"
     
     case "$source_firmware" in
-        "main")  echo "$MAIN_WORKDIR" ;;
-        "extra") echo "$EXTRA_WORKDIR" ;;
-        "stock") echo "$STOCK_WORKDIR" ;;
+        "main")  echo "$MAIN_FW" ;;
+        "extra") echo "$EXTRA_FW" ;;
+        "stock") echo "$STOCK_FW" ;;
         *)
         
             local blob_source="$BLOBS_DIR/$source_firmware"

@@ -19,7 +19,7 @@ To create a universal, hassle-free ROM modification solution that will auto patc
 
 ### Misc
 - All flagship features 
-- Battery health status from A23
+- Battery health and charging cycles info
 - Multiuser support enabled
 - Adaptive color tone
 - Outdoor mode
@@ -30,7 +30,7 @@ To create a universal, hassle-free ROM modification solution that will auto patc
 - Unlock higher FPS on games
 - Smart Manager CN 
 - Samsung encryption removed
-- Fixed Knox apps ([KnoxPatch](https://github.com/salvogiangri/KnoxPatch))
+- Fixed Knox apps 
 - Disabled secure screenshot detection
 - Fixed SmartView
 
@@ -94,6 +94,6 @@ This is an independent project and is not affiliated with or endorsed by Samsung
 
 <div align="center">
 
-*If this project helped you, consider giving it a ⭐*
+*If this project helped you, consider giving it a star⭐*
 
 </div>

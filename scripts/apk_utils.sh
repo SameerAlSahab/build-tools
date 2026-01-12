@@ -325,7 +325,6 @@ BUILD() {
 
     # Add missing resources for JARs [Android14+ bug] See DECOMPILE function for more info.
     if [[ "$EXT" == "jar" && -d "$WORK_DIR/__res__" ]]; then
-        LOG_INFO "Injecting raw resources (Android 14+ fix)..."
         (cd "$WORK_DIR/__res__" && zip -qr "$BUILT_FILE" .)
     fi
 
@@ -520,13 +519,17 @@ _APKTOOL_PATCH() {
                     rm -rf "$WORK_DIR"
                     ERROR_EXIT "Patch failed for $P_NAME"
                 }
-            elif [[ "$P_NAME" == *.smalipatch ]]; then
-                local SMALI_BIN="$BIN/smali_patcher"
-                "$SMALI_BIN" "$WORK_DIR" "$P" || {
-                    rm -rf "$WORK_DIR"
-                    ERROR_EXIT "Smali patch failed for $P_NAME"
-                }
-            fi
+	elif [[ "$P_NAME" == *.smalipatch ]]; then
+    	local SMALI_BIN="$BIN/smali_patcher"
+    	LOG_INFO "Applying $P_NAME"
+
+    	if ! smali_output=$("$SMALI_BIN" "$WORK_DIR" "$P" 2>&1); then
+        	rm -rf "$WORK_DIR"
+        	echo "$smali_output"
+        	ERROR_EXIT "Failed to apply $P_NAME"
+    	fi
+	fi
+
         done
 
         # Merge resources and run scripts

@@ -33,9 +33,9 @@ DOWNLOAD_FW() {
     declare -A processed_models
 
     for cfg in \
-      "MAIN|$MODEL|$CSC|$IMEI" \
-      "EXTRA|$EXTRA_MODEL|$EXTRA_CSC|${EXTRA_IMEI:-$IMEI}" \
-      "STOCK|$STOCK_MODEL|$STOCK_CSC|$STOCK_IMEI"
+      "source|$MODEL|$CSC|$IMEI" \
+      "extra|$EXTRA_MODEL|$EXTRA_CSC|${EXTRA_IMEI:-$IMEI}" \
+      "stock|$STOCK_MODEL|$STOCK_CSC|$STOCK_IMEI"
     do
         IFS="|" read -r prefix mod reg imei <<< "$cfg"
 
@@ -61,7 +61,7 @@ FETCH_FW() {
     local target="${base}/${mod}_${reg}"
     local meta="${target}/firmware.info"
     local fw_out="${tmp}/${mod}_${reg}"
-    LOG_INFO "Checking $prefix Firmware for $mod ($reg)..."
+    LOG_INFO "Checking Firmware for $mod ($reg)..."
 
 
     local has_local_fw=false
@@ -114,7 +114,7 @@ FETCH_FW() {
         [[ -n "$current" ]] && local_ver=$(echo "$current" | cut -d'_' -f2-)
         prompt="Newer firmware available. Current: $local_ver. Download update?"
     else
-        prompt="No existing firmware found for $prefix. Download $ver_simple?"
+        prompt="No existing $prefix firmware found. Download $ver_simple?"
     fi
 
     CONFIRM_ACTION "$prompt" "true" || {

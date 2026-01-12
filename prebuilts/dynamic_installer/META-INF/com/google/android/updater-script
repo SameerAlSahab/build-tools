@@ -4,13 +4,12 @@ setdefault   extraction_speed     default
 
 #AstroROM script starts here:
 ui_print ""
-ui_print "      /^         /^^ ^^  /^^^ /^^^^^^/^^^^^^^        /^^^^"
-ui_print "     /^ ^^     /^^    /^^     /^^    /^^    /^^    /^^    /^^"
-ui_print "    /^  /^^     /^^           /^^    /^^    /^^  /^^        /^^"
-ui_print "   /^^   /^^      /^^         /^^    /^ /^^      /^^        /^^"
-ui_print "  /^^^^^^ /^^        /^^      /^^    /^^  /^^    /^^        /^^"
-ui_print " /^^       /^^ /^^    /^^     /^^    /^^    /^^    /^^     /^^"
-ui_print "/^^         /^^  /^^ ^^       /^^    /^^      /^^    /^^^^"
+ui_print "     e               d8"
+ui_print "    d8b      d88~\ _d88__ 888-~\  e88~-_"
+ui_print "   /Y88b    C888    888   888    d888   i"
+ui_print "  /  Y88b    Y88b   888   888    8888   |"
+ui_print " /____Y88b    888D  888   888    Y888   '"
+ui_print "/      Y88b \_88P   "88_/ 888     "88_-~"
 ui_print " "
 ui_print "ASTRO ROM  __ROM_VERSION__  FOR __MODEL_NAME__  "
 ui_print ""
@@ -32,7 +31,7 @@ fi
 # Install
    ui_print "Installing ROM... "
    
-   update_zip -sparse super.img $(find_block super)
+   update_zip super.img $(find_block super)
 
 
 

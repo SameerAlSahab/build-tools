@@ -236,10 +236,25 @@ CHECK_DEPENDENCY() {
 
 
 SUDO() {
-    if [[ $EUID -ne 0 ]]; then
-        sudo "$@"
-    else
+    # Already root 
+    if [[ $EUID -eq 0 ]]; then
         "$@"
+        return
     fi
+
+    # Check if sudo auth is cached
+    if ! sudo -n true 2>/dev/null; then
+        echo
+        LOG_INFO "Root access is required for this operation."
+		echo
+
+        # Ask once
+        sudo -v || {
+            ERROR_EXIT "Sudo authentication failed. Aborting."
+        }
+    fi
+
+    # Run command with sudo
+    sudo "$@"
 }
 
