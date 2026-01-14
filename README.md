@@ -8,7 +8,10 @@ AstroROM is an independent ROM project designed with a unique approach to firmwa
 To create a universal, hassle-free ROM modification solution that will auto patch any samsung firmware and create a flashable zip.
 
 ![Logo](readme/astro_banner.png)
-
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Samsung%20OneUI-purple.svg)]()
+[![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
+[![Android](https://img.shields.io/badge/Android-15%2B-green.svg)]()
 
 ---
 
