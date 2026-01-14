@@ -1,2 +1,0 @@
-# Description
-Some miscellaeneous patches.
