@@ -1,4 +1,0 @@
-FF "SYSTEM_CONFIG_SIOP_POLICY_FILENAME" "siop_dm3q_sm8550"
-FF "SETTINGS_CONFIG_BRAND_NAME" "$MODEL_NAME"
-
-ADD_FROM_FW "stock" "system" "priv-app/GameDriver-SM8550"
