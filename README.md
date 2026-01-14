@@ -1,4 +1,4 @@
-The tools i use most for building or personal purposes.
+The tools and files i use most for building and personal purposes.
 
 Authors
 - **[BlassGO](https://github.com/BlassGO)** - For the Dynamic Installer.
